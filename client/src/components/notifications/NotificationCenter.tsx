@@ -28,18 +28,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
   useEffect(() => {
     loadNotifications();
     loadNotificationCount();
-    
-    // Conectar WebSocket para notificações em tempo real
-    const ws = notificationService.connectWebSocket((notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    return () => {
-      if (ws) {
-        ws.close();
-      }
-    };
   }, []);
 
   const loadNotifications = async () => {

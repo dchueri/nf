@@ -1,80 +1,139 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Bars3Icon, 
+import {
+  Bars3Icon,
+  BellIcon,
   MagnifyingGlassIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  CogIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/Button';
-import { NotificationCenter } from '../notifications/NotificationCenter';
+import { useUser } from '../../contexts/UserContext';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
+import { useDebouncedCallback } from '../../hooks/useDebounce';
 
 interface HeaderProps {
-  onSidebarToggle: () => void;
+  onMenuClick: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useUser();
+
+  // Debounce da busca para evitar muitas chamadas à API
+  const debouncedSearch = useDebouncedCallback((query: string) => {
+    if (query.trim()) {
+      // Implementar busca global
+      console.log('Searching for:', query);
+    }
+  }, 500);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    debouncedSearch(searchQuery);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    debouncedSearch(value);
+  };
+
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="bg-white border-b border-gray-200 px-4 py-4 lg:px-6 flex-shrink-0"
-    >
-      <div className="flex items-center justify-between w-full">
-        {/* Left side */}
-        <div className="flex items-center">
+    <header className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between">
+        {/* Left side - Menu button and search */}
+        <div className="flex items-center space-x-4">
           <button
-            onClick={onSidebarToggle}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 mr-2"
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          
-          <div className="hidden lg:block">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-500">Gerencie suas notas fiscais</p>
-          </div>
-        </div>
 
-        {/* Center - Search */}
-        <div className="hidden md:flex flex-1 max-w-lg mx-8">
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          {/* Search */}
+          <form onSubmit={handleSearch} className="hidden md:block">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar em toda a aplicação..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Buscar invoices, números, descrições..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          </form>
         </div>
 
-        {/* Right side */}
+        {/* Right side - Notifications and user menu */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <NotificationCenter />
+          <NotificationDropdown />
 
-          {/* Quick Actions */}
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<span>+</span>}
-          >
-            Nova Invoice
-          </Button>
-
-          {/* User Menu */}
+          {/* User menu */}
           <div className="relative">
-            <button className="flex items-center space-x-2 p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center space-x-2 p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
               <UserCircleIcon className="h-8 w-8 text-gray-400" />
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900">Usuário</p>
-                <p className="text-xs text-gray-500">Company</p>
-              </div>
+              <span className="hidden md:block text-sm font-medium">{user?.name || 'Usuário'}</span>
             </button>
+
+            {showUserMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
+              >
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">{user?.name || 'Usuário'}</p>
+                  <p className="text-sm text-gray-500">{user?.email || 'usuario@empresa.com'}</p>
+                </div>
+                
+                <a
+                  href="/settings"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <CogIcon className="h-4 w-4 mr-2" />
+                  Configurações
+                </a>
+                
+                <button
+                  onClick={() => {
+                    // Implementar logout
+                    console.log('Logout clicked');
+                  }}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+                  Sair
+                </button>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
-    </motion.header>
+
+      {/* Mobile search */}
+      <div className="md:hidden mt-3">
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </form>
+      </div>
+    </header>
   );
 };

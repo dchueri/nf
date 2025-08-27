@@ -46,7 +46,6 @@ export interface NotificationPreferences {
   userId: string;
   companyId: string;
   email: boolean;
-  push: boolean;
   inApp: boolean;
   reminderFrequency: number; // dias antes do vencimento
   quietHours: {

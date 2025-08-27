@@ -4,9 +4,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { databaseConfig } from '../config/database.config';
-import { AuthModule } from '../auth/auth.module';
-import { UsersModule } from '../users/users.module';
-import { InvoicesModule } from '../invoices/invoices.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { TeamsModule } from './companies/teams.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { InvoicesModule } from '../invoices/invoices.module';
     AuthModule,
     UsersModule,
     InvoicesModule,
+    TeamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

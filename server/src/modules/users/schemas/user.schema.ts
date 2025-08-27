@@ -47,7 +47,7 @@ export class User extends Document {
   @Prop()
   lastLoginAt?: Date;
 
-  @Prop()
+  @Prop({ type: Object })
   reminderPreferences?: {
     email: boolean;
     whatsapp: boolean;

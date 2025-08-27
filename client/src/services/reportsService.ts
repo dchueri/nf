@@ -10,204 +10,132 @@ import {
   KPI
 } from '../types/reports';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:3001';
 
-class ReportsService {
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = localStorage.getItem('access_token');
+// Helper function for making authenticated requests
+const request = async (endpoint: string, options: RequestInit = {}) => {
+  // TODO: Get token from auth context
+  const token = localStorage.getItem('authToken'); // Temporary solution
+  
+  const config: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    return response.json();
-  }
-
-  // Relatórios Financeiros
-  async getFinancialSummary(filters: ReportFilters): Promise<FinancialSummary> {
-    return this.request<FinancialSummary>('/reports/financial/summary', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
-
-  async getMonthlyReport(filters: ReportFilters): Promise<MonthlyReport[]> {
-    return this.request<MonthlyReport[]>('/reports/financial/monthly', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
-
-  async getYearlyReport(year: number, companyId?: string): Promise<MonthlyReport[]> {
-    const params = new URLSearchParams({ year: year.toString() });
-    if (companyId) params.append('companyId', companyId);
     
-    return this.request<MonthlyReport[]>(`/reports/financial/yearly?${params}`);
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
   }
+};
 
-  // Relatórios de Performance
-  async getUserPerformanceReport(filters: ReportFilters): Promise<UserPerformanceReport[]> {
-    return this.request<UserPerformanceReport[]>('/reports/performance/users', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+// Financial Reports
+export const getFinancialSummary = async (filters?: any) => {
+  const params = filters ? `?${new URLSearchParams(filters)}` : '';
+  return request(`/reports/financial/summary${params}`);
+};
 
-  async getCompanyAnalytics(filters: ReportFilters): Promise<CompanyAnalytics> {
-    return this.request<CompanyAnalytics>('/reports/analytics/company', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+export const getMonthlyReport = async (month: number, year: number) => {
+  return request(`/reports/monthly?month=${month}&year=${year}`);
+};
 
-  // Dados para Gráficos
-  async getChartData(chartType: string, filters: ReportFilters): Promise<ChartData> {
-    return this.request<ChartData>(`/reports/charts/${chartType}`, {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+export const getYearlyReport = async (year: number) => {
+  return request(`/reports/yearly?year=${year}`);
+};
 
-  async getKPIs(filters: ReportFilters): Promise<KPI[]> {
-    return this.request<KPI[]>('/reports/kpis', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+export const getUserPerformanceReport = async (userId: string, period: string) => {
+  return request(`/reports/users/${userId}/performance?period=${period}`);
+};
 
-  // Exportação de Relatórios
-  async exportReport(reportType: string, options: ExportOptions): Promise<Blob> {
-    const token = localStorage.getItem('access_token');
-    
-    const response = await fetch(`${API_BASE_URL}/reports/export/${reportType}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      body: JSON.stringify(options),
-    });
+export const getCompanyAnalytics = async (period: string) => {
+  return request(`/reports/analytics/company?period=${period}`);
+};
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+export const getChartData = async (chartType: string, filters?: any) => {
+  const params = filters ? `?${new URLSearchParams({ type: chartType, ...filters })}` : `?type=${chartType}`;
+  return request(`/reports/charts${params}`);
+};
 
-    return response.blob();
-  }
+export const getKPIs = async (period: string) => {
+  return request(`/reports/kpis?period=${period}`);
+};
 
-  async downloadReport(reportId: string): Promise<Blob> {
-    const token = localStorage.getItem('access_token');
-    
-    const response = await fetch(`${API_BASE_URL}/reports/download/${reportId}`, {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
+// Export Reports
+export const exportReport = async (reportType: string, format: string, filters?: any) => {
+  return request(`/reports/export`, {
+    method: 'POST',
+    body: JSON.stringify({ reportType, format, filters }),
+  });
+};
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+export const downloadReport = async (reportId: string) => {
+  return request(`/reports/${reportId}/download`);
+};
 
-    return response.blob();
-  }
+// Report Scheduling
+export const getReportSchedules = async () => {
+  return request('/reports/schedules');
+};
 
-  // Agendamento de Relatórios
-  async getReportSchedules(): Promise<ReportSchedule[]> {
-    return this.request<ReportSchedule[]>('/reports/schedules');
-  }
+export const createReportSchedule = async (schedule: any) => {
+  return request('/reports/schedules', {
+    method: 'POST',
+    body: JSON.stringify(schedule),
+  });
+};
 
-  async createReportSchedule(schedule: Partial<ReportSchedule>): Promise<ReportSchedule> {
-    return this.request<ReportSchedule>('/reports/schedules', {
-      method: 'POST',
-      body: JSON.stringify(schedule),
-    });
-  }
+export const updateReportSchedule = async (scheduleId: string, updates: any) => {
+  return request(`/reports/schedules/${scheduleId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
+};
 
-  async updateReportSchedule(scheduleId: string, updates: Partial<ReportSchedule>): Promise<ReportSchedule> {
-    return this.request<ReportSchedule>(`/reports/schedules/${scheduleId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updates),
-    });
-  }
+export const deleteReportSchedule = async (scheduleId: string) => {
+  return request(`/reports/schedules/${scheduleId}`, {
+    method: 'DELETE',
+  });
+};
 
-  async deleteReportSchedule(scheduleId: string): Promise<void> {
-    return this.request<void>(`/reports/schedules/${scheduleId}`, {
-      method: 'DELETE',
-    });
-  }
+// Preset Reports
+export const getPresetReports = async () => {
+  return request('/reports/presets');
+};
 
-  // Relatórios Pré-configurados
-  async getPresetReports(): Promise<Array<{
-    id: string;
-    name: string;
-    description: string;
-    type: string;
-    defaultFilters: ReportFilters;
-  }>> {
-    return this.request('/reports/presets');
-  }
+export const generatePresetReport = async (presetId: string, filters?: any) => {
+  return request(`/reports/presets/${presetId}/generate`, {
+    method: 'POST',
+    body: JSON.stringify({ filters }),
+  });
+};
 
-  async generatePresetReport(presetId: string, customFilters?: Partial<ReportFilters>): Promise<{
-    reportId: string;
-    downloadUrl: string;
-    estimatedTime: number;
-  }> {
-    return this.request(`/reports/presets/${presetId}/generate`, {
-      method: 'POST',
-      body: JSON.stringify(customFilters || {}),
-    });
-  }
+// Advanced Analytics
+export const getTrendAnalysis = async (metric: string, period: string) => {
+  return request(`/reports/trends?metric=${metric}&period=${period}`);
+};
 
-  // Análises Avançadas
-  async getTrendAnalysis(filters: ReportFilters): Promise<{
-    invoiceTrends: Array<{ date: string; count: number; amount: number }>;
-    statusTrends: Array<{ date: string; status: string; count: number }>;
-    userTrends: Array<{ date: string; userId: string; performance: number }>;
-  }> {
-    return this.request('/reports/analytics/trends', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+export const getRiskAnalysis = async (period: string) => {
+  return request(`/reports/risk?period=${period}`);
+};
 
-  async getRiskAnalysis(filters: ReportFilters): Promise<{
-    overdueRisk: 'low' | 'medium' | 'high';
-    complianceScore: number;
-    recommendations: string[];
-    riskFactors: Array<{
-      factor: string;
-      impact: 'low' | 'medium' | 'high';
-      description: string;
-    }>;
-  }> {
-    return this.request('/reports/analytics/risk', {
-      method: 'POST',
-      body: JSON.stringify(filters),
-    });
-  }
+// Caching
+export const getCachedReport = async (reportId: string) => {
+  return request(`/reports/cache/${reportId}`);
+};
 
-  // Cache e Performance
-  async getCachedReport(reportId: string): Promise<any> {
-    return this.request(`/reports/cache/${reportId}`);
-  }
-
-  async clearReportCache(): Promise<void> {
-    return this.request('/reports/cache/clear', {
-      method: 'DELETE',
-    });
-  }
-}
-
-export const reportsService = new ReportsService();
+export const clearReportCache = async () => {
+  return request('/reports/cache/clear', {
+    method: 'POST',
+  });
+};

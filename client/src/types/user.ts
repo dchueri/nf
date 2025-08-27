@@ -1,6 +1,6 @@
 export enum UserRole {
-  COMPANY = 'company',
   COLLABORATOR = 'collaborator',
+  MANAGER = 'manager'
 }
 
 export enum UserStatus {
@@ -10,22 +10,14 @@ export enum UserStatus {
 }
 
 export interface User {
-  _id: string;
-  email: string;
+  id: string;
   name: string;
+  email: string;
   role: UserRole;
-  status: UserStatus;
-  companyId?: string;
-  invitedBy?: string;
-  phone?: string;
-  cpfCnpj?: string;
-  emailVerified: boolean;
-  lastLoginAt?: string;
-  reminderPreferences?: {
-    email: boolean;
-    whatsapp: boolean;
-    frequency: number;
-  };
+  companyId: string;
+  avatar?: string;
+  position?: string;
+  department?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,4 +29,10 @@ export interface AuthUser {
   role: UserRole;
   companyId?: string;
   status: UserStatus;
+}
+
+export interface UserContextType {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  isLoading: boolean;
 }

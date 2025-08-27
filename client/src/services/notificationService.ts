@@ -99,59 +99,7 @@ class NotificationService {
     });
   }
 
-  // Notificações Push (Web Push API)
-  async subscribeToPushNotifications(subscription: PushSubscription): Promise<void> {
-    return this.request<void>(`/notifications/push/subscribe`, {
-      method: 'POST',
-      body: JSON.stringify(subscription),
-    });
-  }
 
-  async unsubscribeFromPushNotifications(): Promise<void> {
-    return this.request<void>(`/notifications/push/unsubscribe`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Teste de Notificação (para desenvolvimento)
-  async sendTestNotification(type: NotificationType = NotificationType.SYSTEM): Promise<Notification> {
-    return this.request<Notification>(`/notifications/test`, {
-      method: 'POST',
-      body: JSON.stringify({ type }),
-    });
-  }
-
-  // WebSocket para notificações em tempo real
-  connectWebSocket(onNotification: (notification: Notification) => void): WebSocket | null {
-    try {
-      const token = localStorage.getItem('access_token');
-      if (!token) return null;
-
-      const ws = new WebSocket(`${API_BASE_URL.replace('http', 'ws')}/notifications/ws?token=${token}`);
-      
-      ws.onmessage = (event) => {
-        try {
-          const notification = JSON.parse(event.data);
-          onNotification(notification);
-        } catch (error) {
-          console.error('Erro ao processar notificação WebSocket:', error);
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('Erro na conexão WebSocket:', error);
-      };
-
-      ws.onclose = () => {
-        console.log('Conexão WebSocket fechada');
-      };
-
-      return ws;
-    } catch (error) {
-      console.error('Erro ao conectar WebSocket:', error);
-      return null;
-    }
-  }
 }
 
 export const notificationService = new NotificationService();
