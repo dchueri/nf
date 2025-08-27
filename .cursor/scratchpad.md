@@ -347,6 +347,40 @@
 9. ✅ **Docker Compose configurado com MongoDB, servidor e cliente**
 10. ✅ **Scripts de setup e inicialização criados**
 
+### Task 1.2: User Authentication System - ✅ COMPLETO
+
+**Status:** Concluído com sucesso
+**Data:** $(date)
+
+**O que foi implementado:**
+1. ✅ **Módulo de Autenticação** com JWT e Passport
+2. ✅ **Módulo de Usuários** com CRUD completo
+3. ✅ **DTOs e Validações** para registro e login
+4. ✅ **Guards e Decorators** para proteção de rotas
+5. ✅ **Estratégias de autenticação** (Local e JWT)
+6. ✅ **Controle de roles** (Company e Collaborator)
+7. ✅ **Validação de dados** com class-validator
+8. ✅ **Documentação Swagger** para todos os endpoints
+9. ✅ **Sistema de convites** para colaboradores
+10. ✅ **Health check endpoint** para monitoramento
+
+### Task 1.3: Invoice Upload & Storage - ✅ COMPLETO
+
+**Status:** Concluído com sucesso
+**Data:** $(date)
+
+**O que foi implementado:**
+1. ✅ **Módulo de Invoices** com CRUD completo
+2. ✅ **Sistema de upload de arquivos** com Multer
+3. ✅ **Validação de arquivos** (PDF/XML apenas)
+4. ✅ **Armazenamento seguro** dos arquivos
+5. ✅ **DTOs e validações** para invoices
+6. ✅ **Controle de acesso** com ResourceAccessGuard
+7. ✅ **Funcionalidades avançadas** (resumo mensal, atrasos)
+8. ✅ **Download de arquivos** com controle de acesso
+9. ✅ **Filtros e busca** por status, tipo, datas
+10. ✅ **Documentação Swagger** completa para invoices
+
 **Tecnologias configuradas:**
 - **Backend:** NestJS + TypeScript
 - **Banco:** MongoDB + Mongoose
