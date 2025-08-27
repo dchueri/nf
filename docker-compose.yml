@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: central-notas-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: central-notas-pj
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: mongod --auth --bind_ip_all
+    networks:
+      - central-notas-network
+
+  # NestJS Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: central-notas-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://app_user:app_password@mongodb:27017/central-notas-pj
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRES_IN: 7d
+      PORT: 3001
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./server/uploads:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - central-notas-network
+    command: yarn start:dev
+
+  # React Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: central-notas-client
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3001
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    networks:
+      - central-notas-network
+    command: yarn dev
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  central-notas-network:
+    driver: bridge
