@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   UsersIcon,
@@ -9,6 +9,9 @@ import {
   ExclamationTriangleIcon,
   BellIcon,
   ChartBarIcon,
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/Button';
 import { Skeleton, SkeletonTable } from '../ui/Skeleton';
@@ -23,12 +26,98 @@ interface UserStatus {
   status: 'approved' | 'rejected' | 'pending' | 'not_submitted';
   amount?: number;
   submittedAt?: string;
+  referenceMonth: string; // Mês de referência (YYYY-MM)
+  deadlineDate: string; // Data limite para o mês
 }
 
 export const ManagerDashboard: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'not_submitted'>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('2024-01');
   const [loading, setLoading] = useState(false);
   const toast = useToastHelpers();
+
+  // Funções auxiliares para meses
+  const getAvailableMonths = () => {
+    const months = [...new Set(users.map(user => user.referenceMonth))];
+    return months.sort().reverse(); // Mais recente primeiro
+  };
+
+  const formatMonthDisplay = (monthString: string) => {
+    const [year, month] = monthString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  };
+
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    let newYear = year;
+    let newMonth = month;
+
+    if (direction === 'prev') {
+      if (month === 1) {
+        newMonth = 12;
+        newYear = year - 1;
+      } else {
+        newMonth = month - 1;
+      }
+    } else {
+      if (month === 12) {
+        newMonth = 1;
+        newYear = year + 1;
+      } else {
+        newMonth = month + 1;
+      }
+    }
+
+    const newMonthString = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+    setSelectedMonth(newMonthString);
+  };
+
+  // Estado para o datepicker customizado
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [currentViewYear, setCurrentViewYear] = useState(() => {
+    const [year] = selectedMonth.split('-');
+    return parseInt(year);
+  });
+  const datePickerRef = useRef<HTMLDivElement>(null);
+
+  // Fechar datepicker quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setIsDatePickerOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Atualizar ano da visualização quando selectedMonth mudar
+  useEffect(() => {
+    const [year] = selectedMonth.split('-');
+    setCurrentViewYear(parseInt(year));
+  }, [selectedMonth]);
+
+  const openDatePicker = () => {
+    setIsDatePickerOpen(true);
+  };
+
+  const selectMonth = (month: number, year: number) => {
+    const newMonthString = `${year}-${String(month).padStart(2, '0')}`;
+    setSelectedMonth(newMonthString);
+    setIsDatePickerOpen(false);
+  };
+
+  const months = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+  ];
 
   // Mock data
   const users: UserStatus[] = [
@@ -41,6 +130,8 @@ export const ManagerDashboard: React.FC = () => {
       status: 'approved',
       amount: 5000,
       submittedAt: '2024-01-15',
+      referenceMonth: '2024-01',
+      deadlineDate: '2024-01-15',
     },
     {
       id: '2',
@@ -49,6 +140,8 @@ export const ManagerDashboard: React.FC = () => {
       department: 'Marketing',
       hasSubmitted: false,
       status: 'not_submitted',
+      referenceMonth: '2024-01',
+      deadlineDate: '2024-01-15',
     },
     {
       id: '3',
@@ -59,6 +152,8 @@ export const ManagerDashboard: React.FC = () => {
       status: 'pending',
       amount: 4800,
       submittedAt: '2024-01-14',
+      referenceMonth: '2024-01',
+      deadlineDate: '2024-01-15',
     },
     {
       id: '4',
@@ -69,26 +164,57 @@ export const ManagerDashboard: React.FC = () => {
       status: 'rejected',
       amount: 5200,
       submittedAt: '2024-01-13',
+      referenceMonth: '2024-01',
+      deadlineDate: '2024-01-15',
+    },
+    {
+      id: '5',
+      name: 'Carlos Lima',
+      email: 'carlos.lima@empresa.com',
+      department: 'Financeiro',
+      hasSubmitted: false,
+      status: 'not_submitted',
+      referenceMonth: '2024-02',
+      deadlineDate: '2024-02-15',
+    },
+    {
+      id: '6',
+      name: 'Fernanda Costa',
+      email: 'fernanda.costa@empresa.com',
+      department: 'Vendas',
+      hasSubmitted: true,
+      status: 'approved',
+      amount: 4500,
+      submittedAt: '2024-02-10',
+      referenceMonth: '2024-02',
+      deadlineDate: '2024-02-15',
     },
   ];
 
   // Memoização dos dados filtrados
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
+      // Filtro por mês de referência
+      if (user.referenceMonth !== selectedMonth) return false;
+      
+      // Filtro por status
       if (selectedFilter === 'all') return true;
       return user.status === selectedFilter;
     });
-  }, [users, selectedFilter]);
+  }, [users, selectedFilter, selectedMonth]);
 
   // Memoização das estatísticas
-  const stats = useMemo(() => ({
-    totalUsers: users.length,
-    submitted: users.filter(u => u.hasSubmitted).length,
-    pending: users.filter(u => u.status === 'pending').length,
-    approved: users.filter(u => u.status === 'approved').length,
-    rejected: users.filter(u => u.status === 'rejected').length,
-    notSubmitted: users.filter(u => u.status === 'not_submitted').length,
-  }), [users]);
+  const stats = useMemo(() => {
+    const monthUsers = users.filter(u => u.referenceMonth === selectedMonth);
+    return {
+      totalUsers: monthUsers.length,
+      submitted: monthUsers.filter(u => u.hasSubmitted).length,
+      pending: monthUsers.filter(u => u.status === 'pending').length,
+      approved: monthUsers.filter(u => u.status === 'approved').length,
+      rejected: monthUsers.filter(u => u.status === 'rejected').length,
+      notSubmitted: monthUsers.filter(u => u.status === 'not_submitted').length,
+    };
+  }, [users, selectedMonth]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -133,6 +259,21 @@ export const ManagerDashboard: React.FC = () => {
       default:
         return status;
     }
+  };
+
+  const getDelayStatus = (user: UserStatus) => {
+    if (user.hasSubmitted) return null;
+    
+    const deadline = new Date(user.deadlineDate);
+    const now = new Date();
+    
+    if (now > deadline) {
+      const daysLate = Math.ceil((now.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
+      return { isLate: true, daysLate };
+    }
+    
+    const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return { isLate: false, daysUntilDeadline };
   };
 
   const handleSendReminders = useCallback(async () => {
@@ -196,6 +337,145 @@ export const ManagerDashboard: React.FC = () => {
             <ChartBarIcon className="h-4 w-4 mr-2" />
             {loading ? 'Gerando...' : 'Gerar Relatório'}
           </Button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Mês de Referência</h3>
+            <p className="text-sm text-gray-600">Filtre os dados por mês específico</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigateMonth('prev')}
+                className="px-2"
+                title="Mês anterior"
+              >
+                ←
+              </Button>
+              
+              <div className="relative" ref={datePickerRef}>
+                <button
+                  type="button"
+                  onClick={openDatePicker}
+                  className="flex items-center justify-between w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:bg-gray-50 transition-colors"
+                  title="Selecione o mês e ano de referência"
+                >
+                  <span className="text-sm text-gray-900">
+                    {formatMonthDisplay(selectedMonth)}
+                  </span>
+                  <CalendarIcon className="h-5 w-5 text-gray-400" />
+                </button>
+
+                {/* Datepicker Dropdown */}
+                {isDatePickerOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                  >
+                    {/* Header com navegação de ano */}
+                    <div className="flex items-center justify-between p-3 border-b border-gray-200">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentViewYear(currentViewYear - 1);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <ChevronLeftIcon className="h-4 w-4 text-gray-600" />
+                      </button>
+                      <span className="text-sm font-medium text-gray-900">
+                        {currentViewYear}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentViewYear(currentViewYear + 1);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </div>
+
+                    {/* Grid de meses */}
+                    <div className="p-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        {months.map((month, index) => {
+                          const monthNumber = index + 1;
+                          const monthString = `${currentViewYear}-${String(monthNumber).padStart(2, '0')}`;
+                          const isSelected = monthString === selectedMonth;
+                          const isCurrentMonth = monthString === getCurrentMonth();
+                          
+                          return (
+                            <button
+                              key={month}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                selectMonth(monthNumber, currentViewYear);
+                              }}
+                              className={`
+                                px-3 py-2 text-sm rounded-md transition-colors
+                                ${isSelected 
+                                  ? 'bg-blue-600 text-white font-medium' 
+                                  : 'hover:bg-gray-100 text-gray-700'
+                                }
+                                ${isCurrentMonth ? 'ring-2 ring-blue-300' : ''}
+                              `}
+                            >
+                              {month}
+                              {isCurrentMonth && !isSelected && (
+                                <span className="ml-1 text-xs text-blue-600">•</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Footer com botão para mês atual */}
+                    <div className="p-3 border-t border-gray-200">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMonth(getCurrentMonth());
+                          setIsDatePickerOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      >
+                        Ir para Mês Atual
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+              
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigateMonth('next')}
+                className="px-2"
+                title="Próximo mês"
+              >
+                →
+              </Button>
+            </div>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setSelectedMonth(getCurrentMonth())}
+            >
+              Mês Atual
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -315,9 +595,9 @@ export const ManagerDashboard: React.FC = () => {
       {/* Users Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">
-            Status dos Usuários ({filteredUsers.length})
-          </h2>
+                         <h2 className="text-lg font-medium text-gray-900">
+                 Status dos Usuários - {formatMonthDisplay(selectedMonth)} ({filteredUsers.length})
+               </h2>
         </div>
 
         <div className="overflow-x-auto">
@@ -335,6 +615,9 @@ export const ManagerDashboard: React.FC = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Valor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Prazo
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Data Envio
@@ -381,6 +664,26 @@ export const ManagerDashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.amount ? formatCurrency(user.amount) : '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(() => {
+                      const delayStatus = getDelayStatus(user);
+                      if (!delayStatus) return '-';
+                      
+                      if (delayStatus.isLate) {
+                        return (
+                          <span className="text-red-600 font-medium">
+                            ⚠️ {delayStatus.daysLate} dia(s) atrasado
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="text-green-600 font-medium">
+                            ⏰ {delayStatus.daysUntilDeadline} dia(s) restante(s)
+                          </span>
+                        );
+                      }
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.submittedAt ? formatDate(user.submittedAt) : '-'}

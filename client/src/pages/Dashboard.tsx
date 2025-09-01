@@ -23,7 +23,6 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Render dashboard based on user role
   if (user.role === 'manager') {
     return <ManagerDashboard />;
   }
