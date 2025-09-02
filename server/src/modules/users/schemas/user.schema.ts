@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { InvoiceStatus } from '../../invoices/schemas/invoice.schema';
 
 export enum UserRole {
   COMPANY = 'company',
@@ -29,11 +30,31 @@ export class User extends Document {
   @Prop({ required: true, enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
+  @Prop()
+  department?: string;
+
   @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
   companyId?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
-  invitedBy?: Types.ObjectId;
+  @Prop({
+    type: [
+      {
+        month: String,
+        submittedAt: Date,
+        invoices: Number,
+        status: { type: String, enum: InvoiceStatus },
+      },
+    ],
+    default: [],
+  })
+  monthsWithInvoices: [
+    {
+      month: string;
+      submittedAt: Date;
+      invoices: number;
+      status: InvoiceStatus;
+    },
+  ];
 
   @Prop()
   phone?: string;

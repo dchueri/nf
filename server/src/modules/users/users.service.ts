@@ -1,15 +1,43 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InvoiceStatus } from '../invoices/schemas/invoice.schema';
+import { PaginatedResponseDto } from 'src/common/dto/response.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async getUsersStatsByMonth(
+    companyId: string,
+    referenceMonth: string,
+  ): Promise<{ total: number; approved: number; pending: number }> {
+    const companyUsers = await this.userModel.find({ companyId });
+
+    const stats = {
+      total: companyUsers.length,
+      approved: 0,
+      pending: 0,
+    };
+    for (const user of companyUsers) {
+      const monthUser = user.monthsWithInvoices.find(
+        (month) => month.month === referenceMonth,
+      );
+      if (monthUser) {
+        stats[monthUser.status]++;
+      } else {
+        stats.pending++;
+      }
+    }
+    return stats;
+  }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
@@ -24,13 +52,28 @@ export class UsersService {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('ID de usuário inválido');
     }
-    
+
     const user = await this.userModel.findById(id).exec();
     if (!user) {
       throw new NotFoundException('Usuário não encontrado');
     }
-    
+
     return user;
+  }
+
+  async findByCompanyPaginated(companyId: string, page: number, limit: number, search: string): Promise<PaginatedResponseDto<User>> {
+    const users = await this.userModel.find({ companyId, $or: [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }] })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return {
+      docs: users,
+      total: users.length,
+      page,
+      limit,
+      totalPages: Math.ceil(users.length / limit),
+    };
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -47,11 +90,13 @@ export class UsersService {
     }
 
     if (updateUserDto.email) {
-      const existingUser = await this.userModel.findOne({ 
-        email: updateUserDto.email, 
-        _id: { $ne: id } 
-      }).exec();
-      
+      const existingUser = await this.userModel
+        .findOne({
+          email: updateUserDto.email,
+          _id: { $ne: id },
+        })
+        .exec();
+
       if (existingUser) {
         throw new ConflictException('Email já está em uso por outro usuário');
       }
@@ -60,11 +105,11 @@ export class UsersService {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .exec();
-    
+
     if (!updatedUser) {
       throw new NotFoundException('Usuário não encontrado');
     }
-    
+
     return updatedUser;
   }
 
@@ -97,15 +142,19 @@ export class UsersService {
     const updatedUser = await this.userModel
       .findByIdAndUpdate(id, { status }, { new: true })
       .exec();
-    
+
     if (!updatedUser) {
       throw new NotFoundException('Usuário não encontrado');
     }
-    
+
     return updatedUser;
   }
 
-  async inviteCollaborator(email: string, companyId: string, invitedBy: string): Promise<User> {
+  async inviteCollaborator(
+    email: string,
+    companyId: string,
+    invitedBy: string,
+  ): Promise<User> {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('Usuário com este email já existe');

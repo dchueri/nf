@@ -2,11 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum InvoiceStatus {
-  PENDING = 'pending',
   SUBMITTED = 'submitted',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  PAID = 'paid',
+  IGNORED = 'ignored',
 }
 
 export enum InvoiceType {
@@ -41,7 +40,7 @@ export class Invoice extends Document {
   @Prop({ required: true, enum: InvoiceType })
   type: InvoiceType;
 
-  @Prop({ required: true, enum: InvoiceStatus, default: InvoiceStatus.PENDING })
+  @Prop({ required: true, enum: InvoiceStatus, default: InvoiceStatus.SUBMITTED })
   status: InvoiceStatus;
 
   @Prop({ required: true })

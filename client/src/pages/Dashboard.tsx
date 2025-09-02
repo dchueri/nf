@@ -1,6 +1,6 @@
 import React from 'react';
 import { useUser } from '../contexts/UserContext';
-import { ManagerDashboard } from '../components/dashboard/ManagerDashboard';
+import { ManagerDashboard } from '../components/dashboard/Manager/ManagerDashboard';
 import { CollaboratorDashboard } from '../components/dashboard/CollaboratorDashboard';
 
 export const Dashboard: React.FC = () => {

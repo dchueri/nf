@@ -8,8 +8,9 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExtraModels } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,11 +20,14 @@ import { ResourceAccessGuard } from '../auth/guards/resource-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
 import { UserRole } from './schemas/user.schema';
+import { ResponseDto } from 'src/common/dto/response.dto';
+import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 
 @ApiTags('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard, ResourceAccessGuard)
 @ApiBearerAuth()
+@ApiExtraModels(ResponseDto)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -45,8 +49,17 @@ export class UsersController {
   @Roles(UserRole.COMPANY)
   @ApiOperation({ summary: 'Listar todos os usuários da empresa' })
   @ApiResponse({ status: 200, description: 'Lista de usuários' })
-  findAll(@Request() req) {
-    return this.usersService.findByCompany(req.user.companyId);
+  findAll(@Request() req, @Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string) {
+    return this.usersService.findByCompanyPaginated(req.user.companyId, page, limit, search);
+  }
+
+  @Get('stats/:referenceMonth')
+  @Roles(UserRole.COMPANY)
+  @ApiOperation({ summary: 'Obter estatísticas dos usuários por mês de referência' })
+  @ApiResponse({ status: 200, description: 'Estatísticas dos usuários' })
+  @ResponseMessage('Estatísticas dos usuários obtidas com sucesso')
+  getStats(@Request() req, @Param('referenceMonth') referenceMonth: string) {
+    return this.usersService.getUsersStatsByMonth(req.user.companyId, referenceMonth);
   }
 
   @Get('profile')
