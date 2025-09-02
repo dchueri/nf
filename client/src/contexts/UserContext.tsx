@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, UserContextType, UserRole } from '../types/user';
+import { User, UserContextType } from '../types/user';
+import { authService, authUtils } from '../services/authService';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -11,26 +12,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Verificar autenticação ao inicializar
   useEffect(() => {
-    // Mock user data for development
-    // In production, this would come from authentication service
-    const mockUser: User = {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao.silva@empresa.com',
-      role: UserRole.MANAGER, // Change to COLLABORATOR to test different views
-      companyId: 'company-1',
-      position: 'Desenvolvedor Senior',
-      department: 'TI',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await authService.isAuthenticated();
+        if (isAuthenticated) {
+          const profile = await authService.getProfile();
+          const user = authUtils.formatUserForContext(profile);
+          setUser(user);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    // Simulate API call delay
-    setTimeout(() => {
-      setUser(mockUser);
-      setIsLoading(false);
-    }, 1000);
+    checkAuth();
   }, []);
 
   const value: UserContextType = {

@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 import { InvoiceStatus } from '../../invoices/schemas/invoice.schema';
 
 export enum UserRole {
-  COMPANY = 'company',
+  MANAGER = 'manager',
   COLLABORATOR = 'collaborator',
 }
 

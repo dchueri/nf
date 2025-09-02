@@ -32,7 +32,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Criar novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -46,7 +46,7 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Listar todos os usuários da empresa' })
   @ApiResponse({ status: 200, description: 'Lista de usuários' })
   findAll(@Request() req, @Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string) {
@@ -54,7 +54,7 @@ export class UsersController {
   }
 
   @Get('stats/:referenceMonth')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Obter estatísticas dos usuários por mês de referência' })
   @ApiResponse({ status: 200, description: 'Estatísticas dos usuários' })
   @ResponseMessage('Estatísticas dos usuários obtidas com sucesso')
@@ -90,7 +90,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Remover usuário' })
   @ApiResponse({ status: 200, description: 'Usuário removido' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
@@ -99,7 +99,7 @@ export class UsersController {
   }
 
   @Post('invite')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Convidar colaborador' })
   @ApiResponse({ status: 201, description: 'Convite enviado' })
   @ApiResponse({ status: 409, description: 'Email já existe' })
@@ -115,7 +115,7 @@ export class UsersController {
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Atualizar status do usuário' })
   @ApiResponse({ status: 200, description: 'Status atualizado' })
   updateStatus(

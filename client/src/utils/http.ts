@@ -14,8 +14,7 @@ const api = axios.create({
 // Interceptor para adicionar token de autenticação
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    console.log(token)
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,9 +32,12 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token expirado ou inválido
-      localStorage.setItem('access_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RlQHRlc3RlLmNvbSIsInN1YiI6IjY4YjcyZjQyMWQ4MTkzYjk2Y2MzODkxNCIsInJvbGUiOiJjb21wYW55IiwiY29tcGFueUlkIjoiNTA3ZjFmNzdiY2Y4NmNkNzk5NDM5MDExIiwiaWF0IjoxNzU2ODM1NjUwLCJleHAiOjE3NTc0NDA0NTB9.Rn7j1g0RmmqdqH1bpbaBLYf_d9WkmWBgmyqLWpbWixE');
-    //   window.location.href = '/login';
+      // Token expirado ou inválido - redirecionar para login
+      localStorage.removeItem('access_token');
+      sessionStorage.removeItem('access_token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
       throw new Error('Não autorizado');
     }
     
@@ -53,15 +55,9 @@ export const request = async <T>(
   endpoint: string,
   options: AxiosRequestConfig = {}
 ): Promise<T> => {
-  try {
-    console.log('ooo')
     const response = await api.request<T>({
       url: endpoint,
       ...options,
     });
     return response.data;
-  } catch (error) {
-    console.error('Erro na requisição:', error);
-    throw error;
-  }
 };

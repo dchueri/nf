@@ -21,6 +21,7 @@ export interface User {
     invoices: number
     status: InvoiceStatus
     submittedAt: string
+    amount?: number
   }[]
   companyId: string
   avatar?: string

@@ -52,29 +52,32 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   // Mock data for development
   const mockUsers: User[] = [
     {
-      id: '1',
+      _id: '1',
       email: 'joao.silva@empresa.com',
       name: 'João Silva',
       role: UserRole.MANAGER,
       companyId: companyId || '',
+      monthsWithInvoices: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
     {
-      id: '2',
+      _id: '2',
       email: 'maria.santos@empresa.com',
       name: 'Maria Santos',
       role: UserRole.COLLABORATOR,
       companyId: companyId || '',
+      monthsWithInvoices: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
     {
-      id: '3',
+      _id: '3',
       email: 'pedro.oliveira@empresa.com',
       name: 'Pedro Oliveira',
       role: UserRole.COLLABORATOR,
       companyId: companyId || '',
+      monthsWithInvoices: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -145,7 +148,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(user => user.id)));
+      setSelectedUsers(new Set(filteredUsers.map(user => user._id)));
     }
   };
 
@@ -165,10 +168,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         
         // Update local state
         if (operation === 'remove') {
-          setUsers(users.filter(user => !selectedUsers.has(user.id)));
+          setUsers(users.filter(user => !selectedUsers.has(user._id)));
         } else if (operation === 'suspend') {
           setUsers(users.map(user => 
-            selectedUsers.has(user.id) 
+            selectedUsers.has(user._id) 
               ? { ...user, role: UserRole.COLLABORATOR }
               : user
           ));
@@ -428,12 +431,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </tr>
             ) : (
               currentUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.has(user.id)}
-                      onChange={() => handleUserSelection(user.id)}
+                      checked={selectedUsers.has(user._id)}
+                      onChange={() => handleUserSelection(user._id)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>

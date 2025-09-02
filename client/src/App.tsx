@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { UserProvider } from './contexts/UserContext';
 import { ToastProvider } from './components/ui/Toast';
 import { AppLayout } from './components/layout/AppLayout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Skeleton, SkeletonCard } from './components/ui/Skeleton';
 
 // Lazy loading das páginas
@@ -11,6 +12,7 @@ const Invoices = lazy(() => import('./pages/Invoices').then(module => ({ default
 const Reports = lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const Users = lazy(() => import('./pages/Users').then(module => ({ default: module.Users })));
 const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
+const Login = lazy(() => import('./pages/auth/Login').then(module => ({ default: module.Login })));
 
 // Loading fallback component
 const PageLoading = () => (
@@ -35,7 +37,21 @@ function App() {
       <ToastProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<AppLayout />}>
+            {/* Public routes */}
+            <Route path="/login" element={
+              <ProtectedRoute requireAuth={false} redirectTo="/">
+                <Suspense fallback={<PageLoading />}>
+                  <Login />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+
+            {/* Protected routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
               <Route index element={
                 <Suspense fallback={<PageLoading />}>
                   <Dashboard />

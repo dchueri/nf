@@ -1,0 +1,275 @@
+import { User, UserRole } from '../types/user'
+import { request } from '../utils/http'
+
+// Interfaces para as operações de autenticação
+export interface LoginCredentials {
+  email: string
+  password: string
+  rememberMe?: boolean
+}
+
+export interface RegisterData {
+  name: string
+  email: string
+  password: string
+  role: UserRole
+  companyId?: string
+  position?: string
+  department?: string
+}
+
+export interface AuthResponse {
+  user: {
+    id: string
+    email: string
+    name: string
+    role: UserRole
+    companyId?: string
+    status: string
+  }
+  access_token: string
+}
+
+export interface RefreshTokenResponse {
+  access_token: string
+}
+
+export interface UserProfile {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  companyId?: string
+  status: string
+}
+
+// Service principal de autenticação
+export const authService = {
+  // Login do usuário
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const response = await request<AuthResponse>('/auth/login', {
+      method: 'POST',
+      data: {
+        email: credentials.email,
+        password: credentials.password
+      }
+    })
+
+    // Armazenar token baseado na opção "remember me"
+    if (credentials.rememberMe) {
+      localStorage.setItem('access_token', response.access_token)
+    } else {
+      sessionStorage.setItem('access_token', response.access_token)
+    }
+
+    return response
+  },
+
+  // Registro de novo usuário
+  async register(userData: RegisterData): Promise<AuthResponse> {
+    const response = await request<AuthResponse>('/auth/register', {
+      method: 'POST',
+      data: userData
+    })
+
+    // Armazenar token após registro bem-sucedido
+    localStorage.setItem('access_token', response.access_token)
+
+    return response
+  },
+
+  // Renovar token JWT
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    const response = await request<RefreshTokenResponse>('/auth/refresh', {
+      method: 'POST'
+    })
+
+    // Atualizar token armazenado
+    const currentToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+    if (currentToken) {
+      if (localStorage.getItem('access_token')) {
+        localStorage.setItem('access_token', response.access_token)
+      } else {
+        sessionStorage.setItem('access_token', response.access_token)
+      }
+    }
+
+    return response
+  },
+
+  // Obter perfil do usuário autenticado
+  async getProfile(): Promise<UserProfile> {
+    return request<UserProfile>('/auth/profile', {
+      method: 'GET'
+    })
+  },
+
+  // Logout do usuário
+  async logout(): Promise<void> {
+    try {
+      // TODO: Implementar logout no backend se necessário
+      // await request('/auth/logout', { method: 'POST' })
+    } catch (error) {
+      console.error('Erro no logout:', error)
+    } finally {
+      // Limpar tokens locais
+      localStorage.removeItem('access_token')
+      sessionStorage.removeItem('access_token')
+    }
+  },
+
+  // Verificar se o usuário está autenticado
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+      if (!token) {
+        return false
+      }
+
+      // Tentar obter o perfil para verificar se o token é válido
+      await this.getProfile()
+      return true
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error)
+      return false
+    }
+  },
+
+  // Obter token atual
+  getCurrentToken(): string | null {
+    return localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+  },
+
+  // Verificar se o token está expirado
+  isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const currentTime = Date.now() / 1000
+      return payload.exp < currentTime
+    } catch (error) {
+      console.error('Erro ao verificar expiração do token:', error)
+      return true
+    }
+  },
+
+  // Renovar token se estiver expirado
+  async refreshTokenIfNeeded(): Promise<string | null> {
+    const token = this.getCurrentToken()
+    if (!token) {
+      return null
+    }
+
+    if (this.isTokenExpired(token)) {
+      try {
+        const response = await this.refreshToken()
+        return response.access_token
+      } catch (error) {
+        console.error('Erro ao renovar token:', error)
+        await this.logout()
+        return null
+      }
+    }
+
+    return token
+  },
+
+  // Validar credenciais sem fazer login
+  async validateCredentials(email: string, password: string): Promise<boolean> {
+    try {
+      await request('/auth/login', {
+        method: 'POST',
+        data: { email, password }
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  },
+
+  // Esqueci minha senha
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      data: { email }
+    })
+  },
+
+  // Redefinir senha
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/auth/reset-password', {
+      method: 'POST',
+      data: { token, newPassword }
+    })
+  },
+
+  // Verificar se email está disponível
+  async checkEmailAvailability(email: string): Promise<boolean> {
+    try {
+      await request(`/auth/check-email/${email}`, {
+        method: 'GET'
+      })
+      return true // Email disponível
+    } catch (error) {
+      return false // Email já existe
+    }
+  }
+}
+
+// Hooks personalizados para facilitar o uso
+export const useAuthService = () => {
+  return authService
+}
+
+// Funções utilitárias
+export const authUtils = {
+  // Formatar dados do usuário para o contexto
+  formatUserForContext: (authUser: AuthResponse['user']): User => {
+    return {
+      _id: authUser.id,
+      name: authUser.name,
+      email: authUser.email,
+      role: authUser.role,
+      companyId: authUser.companyId || '',
+      monthsWithInvoices: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  },
+
+  // Verificar se o usuário tem permissão específica
+  hasPermission: (user: User, permission: string): boolean => {
+    // TODO: Implementar lógica de permissões baseada no role
+    return user.role === UserRole.MANAGER
+  },
+
+  // Verificar se o usuário pode acessar recurso específico
+  canAccess: (user: User, resource: string): boolean => {
+    const permissions = {
+      'dashboard': [UserRole.MANAGER, UserRole.COLLABORATOR],
+      'users': [UserRole.MANAGER],
+      'reports': [UserRole.MANAGER],
+      'settings': [UserRole.MANAGER],
+      'invoices': [UserRole.MANAGER, UserRole.COLLABORATOR]
+    }
+
+    const allowedRoles = permissions[resource as keyof typeof permissions] || []
+    return allowedRoles.includes(user.role)
+  },
+
+  // Obter token de autenticação para requisições
+  getAuthHeaders: (): Record<string, string> => {
+    const token = authService.getCurrentToken()
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  },
+
+  // Limpar dados de autenticação
+  clearAuthData: (): void => {
+    localStorage.removeItem('access_token')
+    sessionStorage.removeItem('access_token')
+  },
+
+  // Verificar se deve usar localStorage ou sessionStorage
+  shouldUseLocalStorage: (): boolean => {
+    return localStorage.getItem('access_token') !== null
+  }
+}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { UserTable } from './UserTable'
 import { UserFilters, UserFilterType } from './UserFilters'
-import { User } from '../../../types/user'
+import { User, UserRole } from '../../../types/user'
 import { InvoiceStatus } from '../../../types/invoice'
 
 // Exemplo de como usar a tabela de usuários em outro contexto
@@ -12,34 +12,42 @@ export const UserTableExample: React.FC = () => {
   // Mock data para exemplo
   const mockUsers: User[] = [
     {
-      id: '1',
+      _id: '1',
       name: 'João Silva',
       email: 'joao@example.com',
+      role: UserRole.MANAGER,
+      companyId: 'company-1',
       department: 'TI',
       monthsWithInvoices: [
         {
           month: '2024-01',
           status: InvoiceStatus.APPROVED,
           amount: 5000,
+          invoices: 1,
           submittedAt: '2024-01-15'
         }
       ],
-      submittedAt: '2024-01-15'
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
-      id: '2',
+      _id: '2',
       name: 'Maria Santos',
       email: 'maria@example.com',
+      role: UserRole.COLLABORATOR,
+      companyId: 'company-1',
       department: 'Marketing',
       monthsWithInvoices: [
         {
           month: '2024-01',
           status: InvoiceStatus.PENDING,
           amount: 4500,
+          invoices: 1,
           submittedAt: '2024-01-10'
         }
       ],
-      submittedAt: '2024-01-10'
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ]
 

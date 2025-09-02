@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/Button';
 import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../hooks/useAuth';
 import { NotificationDropdown } from '../notifications/NotificationDropdown';
 import { useDebouncedCallback } from '../../hooks/useDebounce';
 
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useUser();
+  const { logout } = useAuth();
 
   // Debounce da busca para evitar muitas chamadas à API
   const debouncedSearch = useDebouncedCallback((query: string) => {
@@ -40,6 +42,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     setSearchQuery(value);
     debouncedSearch(value);
   };
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await logout();
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  }, [logout]);
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -104,10 +115,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 </a>
                 
                 <button
-                  onClick={() => {
-                    // Implementar logout
-                    console.log('Logout clicked');
-                  }}
+                  onClick={handleLogout}
                   className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
