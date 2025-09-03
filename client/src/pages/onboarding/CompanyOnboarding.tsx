@@ -24,10 +24,10 @@ export const CompanyOnboarding: React.FC = () => {
 
     try {
       await completeOnboarding(companyData)
-    } catch (error) {
-      console.error('Erro ao completar onboarding:', error)
-      setError(error.message)
-    } finally {
+          } catch (error) {
+        console.error('Erro ao completar onboarding:', error)
+        setError(error instanceof Error ? error.message : 'Erro ao criar empresa. Tente novamente.')
+      } finally {
       setIsSubmitting(false)
     }
   }

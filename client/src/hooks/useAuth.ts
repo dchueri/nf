@@ -76,7 +76,7 @@ export const useAuth = () => {
     try {
       // Renovar token usando o AuthService
       const response = await authService.refreshToken()
-      return response.access_token
+      return response.data.data.access_token
     } catch (error) {
       console.error('Token refresh error:', error)
       return null

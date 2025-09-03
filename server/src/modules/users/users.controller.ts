@@ -19,7 +19,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { ResourceAccessGuard } from '../auth/guards/resource-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
-import { UserRole } from './schemas/user.schema';
+import { UserRole, UserStatus } from './schemas/user.schema';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { InviteUserDto } from './dto/invite-user.dto';
@@ -50,8 +50,8 @@ export class UsersController {
   @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Listar todos os usuários da empresa' })
   @ApiResponse({ status: 200, description: 'Lista de usuários' })
-  findAll(@Request() req, @Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string) {
-    return this.usersService.findByCompanyPaginated(req.user.companyId, page, limit, search);
+  findAll(@Request() req, @Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string, @Query('status') status: UserStatus, @Query('role') role: UserRole) {
+    return this.usersService.findByCompanyPaginated(req.user.companyId, page, limit, search, status, role);
   }
 
   @Get('stats/:referenceMonth')

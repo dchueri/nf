@@ -155,10 +155,8 @@ export interface UserSearchFilters {
   query?: string;
   role?: string[];
   status?: string[];
-  teamId?: string;
+  companyId?: string;
   department?: string;
-  skills?: string[];
-  isActive?: boolean;
   lastActiveAfter?: string;
   lastActiveBefore?: string;
 }

@@ -50,32 +50,36 @@ export interface CompanyResponse {
 export const companyService = {
   // Criar nova empresa
   async createCompany(companyData: CreateCompanyData): Promise<CompanyResponse> {
-    return request<CompanyResponse>('/companies', {
+    const response = await request<CompanyResponse>('/companies', {
       method: 'POST',
       data: companyData
     })
+    return response.data
   },
 
   // Buscar empresa por ID
   async getCompanyById(companyId: string): Promise<Company> {
-    return request<Company>(`/companies/${companyId}`, {
+    const response = await request<Company>(`/companies/${companyId}`, {
       method: 'GET'
     })
+    return response.data
   },
 
   // Buscar empresa do usuário logado
   async getMyCompany(): Promise<Company> {
-    return request<Company>('/companies/my-company', {
+    const response = await request<Company>('/companies/my-company', {
       method: 'GET'
     })
+    return response.data
   },
 
   // Atualizar empresa
   async updateCompany(companyId: string, updateData: Partial<CreateCompanyData>): Promise<Company> {
-    return request<Company>(`/companies/${companyId}`, {
+    const response = await request<Company>(`/companies/${companyId}`, {
       method: 'PATCH',
       data: updateData
     })
+    return response.data
   },
 
   // Verificar se CNPJ já existe

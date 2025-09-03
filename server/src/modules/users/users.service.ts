@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, UserStatus } from './schemas/user.schema';
+import { User, UserRole, UserStatus } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InvoiceStatus } from '../invoices/schemas/invoice.schema';
@@ -66,6 +66,8 @@ export class UsersService {
     page: number = 1,
     limit: number = 10,
     search: string,
+    status: UserStatus,
+    role: UserRole,
   ): Promise<PaginatedResponseDto<User>> {
     const filters: any = { companyId };
     if (search) {
@@ -73,6 +75,12 @@ export class UsersService {
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
       ];
+    }
+    if (status) {
+      filters.status = status;
+    }
+    if (role) {
+      filters.role = role;
     }
     const users = await this.userModel
       .find(filters)

@@ -66,12 +66,14 @@ export const userService = {
   },
 
   // Buscar usuários para dashboard do gestor
-  async getUsers(page: number, limit: number, search: string): Promise<Response<UserListResponse>> {
+  async getUsers(page: number, limit: number, status: string, role: string, search: string): Promise<Response<UserListResponse>> {
     return request<UserListResponse>(`/users`, {
       method: 'GET',
       params: {
         page,
         limit,
+        status,
+        role,
         search
       }
     })

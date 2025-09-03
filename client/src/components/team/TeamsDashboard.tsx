@@ -7,7 +7,7 @@ import {
   CogIcon,
   UsersIcon
 } from '@heroicons/react/24/outline';
-import { UserManagement } from './UserManagement';
+import { UserManagement } from '../users/UserManagement';
 import { TeamManagement } from './TeamManagement';
 import { InvitationManagement } from './InvitationManagement';
 
