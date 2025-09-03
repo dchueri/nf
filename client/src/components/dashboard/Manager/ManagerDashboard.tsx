@@ -72,7 +72,7 @@ export const ManagerDashboard: React.FC = () => {
     setDataLoading(true)
     Promise.all([
       getUserStats(selectedMonth),
-      getUsers(pagination.page, pagination.limit, textSearch)
+      getUsers(pagination.page, pagination.limit, '', '', textSearch)
     ]).then(([statsData, usersData]) => {
       console.log('statsData', statsData)
       console.log('usersData', usersData)

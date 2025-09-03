@@ -146,7 +146,7 @@ export interface MemberActivity {
 }
 
 export interface BulkUserOperation {
-  operation: 'invite' | 'update' | 'remove' | 'suspend';
+  operation: 'invite' | 'update' | 'remove' | 'suspend' | 'cancel-invite';
   users: string[];
   data?: any;
 }

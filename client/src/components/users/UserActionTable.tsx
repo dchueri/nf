@@ -1,9 +1,11 @@
-import { User, UserRole } from '../../types/user'
+import { StatusBadge } from 'components/ui/StatusBadge'
+import { User, UserRole, UserStatus } from '../../types/user'
 import { cn } from '../../utils/cn'
 import { Button } from '../ui/Button'
 import { UserCircleIcon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { TrashIcon } from '@heroicons/react/24/outline'
+import { Badge } from '../ui/Badge'
 
 export const UserActionTable = ({
   users,
@@ -14,7 +16,8 @@ export const UserActionTable = ({
   totalPages,
   page,
   limit,
-  setPagination
+  setPagination,
+  onAction
 }: {
   users: User[]
   selectedUsers: Set<string>
@@ -25,8 +28,8 @@ export const UserActionTable = ({
   page: number
   limit: number
   setPagination: (pagination: any) => void
+  onAction: (userId: string, action: string) => void
 }) => {
-
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case UserRole.MANAGER:
@@ -72,7 +75,9 @@ export const UserActionTable = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Função
               </th>
-
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Último Login
               </th>
@@ -124,34 +129,50 @@ export const UserActionTable = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={cn(
-                        'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                        getRoleColor(user.role)
-                      )}
-                    >
-                      {getRoleLabel(user.role)}
-                    </span>
+                    <Badge
+                      label={getRoleLabel(user.role)}
+                      className={getRoleColor(user.role)}
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <StatusBadge
+                      type="user"
+                      status={user.status as UserStatus}
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     -
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Editar"
+                  {user.status !== UserStatus.PENDING ? (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900"
+                          title="Editar"
+                          onClick={() => onAction(user._id, 'edit')}
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          title="Remover"
+                          onClick={() => onAction(user._id, 'remove')}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  ) : (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onAction(user._id, 'cancel-invite')}
                       >
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-900"
-                        title="Remover"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                        Cancelar Convite
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -172,7 +193,10 @@ export const UserActionTable = ({
                 variant="secondary"
                 size="sm"
                 onClick={() =>
-                  setPagination((prev: any) => ({ ...prev, page: prev.page - 1 }))
+                  setPagination((prev: any) => ({
+                    ...prev,
+                    page: prev.page - 1
+                  }))
                 }
                 disabled={page === 1}
               >
@@ -185,7 +209,10 @@ export const UserActionTable = ({
                 variant="secondary"
                 size="sm"
                 onClick={() =>
-                  setPagination((prev: any) => ({ ...prev, page: prev.page + 1 }))
+                  setPagination((prev: any) => ({
+                    ...prev,
+                    page: prev.page + 1
+                  }))
                 }
                 disabled={page === totalPages}
               >

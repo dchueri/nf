@@ -17,6 +17,25 @@
 
 **Target Market:** Small to medium Brazilian companies (10-500 employees) struggling with invoice management efficiency.
 
+### 🆕 NEW REQUEST: User Management Modals Implementation
+
+**User Request:** Desenvolver modal de edição de usuário e modal de convite de usuário.
+
+**Business Context:** Os modais de gerenciamento de usuários são essenciais para:
+- Permitir edição rápida de informações de usuários sem sair da página
+- Facilitar o processo de convite de novos usuários
+- Melhorar a eficiência operacional dos gestores
+- Reduzir a fricção no gerenciamento de equipes
+- Manter consistência de dados e permissões
+
+**Success Criteria:**
+- Interface intuitiva e responsiva para edição de usuários
+- Processo de convite simplificado e prático
+- Validação robusta de dados em tempo real
+- Integração perfeita com o sistema de permissões
+- Experiência de usuário fluida e profissional
+- Suporte a diferentes tipos de usuário (gestores e colaboradores)
+
 ### 🆕 NEW REQUEST: Login Screen Implementation
 
 **User Request:** Implementar uma tela de login seguindo as melhores práticas de segurança e UX.
@@ -49,6 +68,50 @@
 2. **Compliance:** Staying updated with Brazilian tax regulations
 3. **Competition:** Differentiating from existing solutions
 4. **Pricing Strategy:** Finding the right price point for target market
+
+### 🆕 User Management Modals Challenges & Analysis
+
+#### Technical Challenges
+1. **Modal Management:**
+   - Gerenciamento de estado dos modais
+   - Prevenção de múltiplos modais abertos
+   - Foco e navegação por teclado
+   - Integração com sistema de permissões
+   - Validação de dados em tempo real
+
+2. **User Experience:**
+   - Interface responsiva para mobile/desktop
+   - Feedback visual claro para ações
+   - Acessibilidade (WCAG 2.1 AA compliance)
+   - Performance otimizada
+   - Animações suaves e profissionais
+
+3. **Data Management:**
+   - Sincronização de dados entre modal e lista
+   - Validação de dados antes do envio
+   - Tratamento de erros de API
+   - Loading states durante operações
+   - Confirmação de ações críticas
+
+#### UX/UI Challenges
+1. **Modal Design:** Interface limpa e focada na tarefa
+2. **Form Validation:** Validação em tempo real sem ser intrusiva
+3. **Error Handling:** Mensagens de erro claras e acionáveis
+4. **Loading States:** Feedback visual durante operações
+5. **Confirmation:** Confirmação para ações destrutivas
+
+#### Security Considerations
+1. **Data Validation:**
+   - Validação de entrada no frontend e backend
+   - Sanitização de dados
+   - Verificação de permissões
+   - Proteção contra XSS
+
+2. **Best Practices:**
+   - Validação de email único
+   - Verificação de permissões de usuário
+   - Log de ações administrativas
+   - Confirmação de ações críticas
 
 ### 🆕 Login Screen Challenges & Analysis
 
@@ -101,6 +164,50 @@
 - **USP:** Ultra-simple, focused solution for PJ invoice management only
 
 ## High-level Task Breakdown
+
+### 🆕 NEW PHASE: User Management Modals Implementation (Priority: HIGH)
+
+#### Task 2.1: User Edit Modal Design & Architecture
+- **Objective:** Criar design system e arquitetura para modal de edição de usuário
+- **Success Criteria:** Design aprovado, arquitetura definida, componentes planejados
+- **Complexity:** Medium
+- **Deliverables:** Design mockups, component architecture, form validation schema
+
+#### Task 2.2: User Edit Modal Core Implementation
+- **Objective:** Implementar modal de edição com funcionalidades básicas
+- **Success Criteria:** Formulário funcional, validação, integração com user service
+- **Complexity:** Medium
+- **Deliverables:** Edit modal, form validation, error handling, loading states
+
+#### Task 2.3: User Invite Modal Design & Architecture
+- **Objective:** Criar design system e arquitetura para modal de convite de usuário
+- **Success Criteria:** Design aprovado, arquitetura definida, componentes planejados
+- **Complexity:** Low
+- **Deliverables:** Design mockups, component architecture, email validation schema
+
+#### Task 2.4: User Invite Modal Core Implementation
+- **Objective:** Implementar modal de convite com funcionalidades básicas
+- **Success Criteria:** Formulário funcional, validação de email, integração com invite service
+- **Complexity:** Low
+- **Deliverables:** Invite modal, email validation, error handling, loading states
+
+#### Task 2.5: Backend Integration & API Endpoints
+- **Objective:** Implementar endpoints de API para edição e convite de usuários
+- **Success Criteria:** Endpoints funcionais, validação, tratamento de erros
+- **Complexity:** Medium
+- **Deliverables:** API endpoints, validation, error handling, security measures
+
+#### Task 2.6: UX/UI Enhancements & Validation
+- **Objective:** Melhorar UX e implementar validação robusta
+- **Success Criteria:** UX fluida, validação em tempo real, feedback visual claro
+- **Complexity:** Medium
+- **Deliverables:** Enhanced UX, real-time validation, visual feedback, animations
+
+#### Task 2.7: Testing & Quality Assurance
+- **Objective:** Testes abrangentes e garantia de qualidade
+- **Success Criteria:** Testes unitários, integração, E2E, accessibility testing
+- **Complexity:** Medium
+- **Deliverables:** Test suite, integration testing, accessibility testing, performance testing
 
 ### 🆕 NEW PHASE: Login Screen Implementation (Priority: HIGH)
 
@@ -347,6 +454,35 @@
 
 ## Core Features - Prioritized Backlog
 
+### 🆕 CRITICAL PRIORITY: User Management Modals Implementation
+1. **User Edit Modal**
+   - Interface limpa e focada para edição de usuários
+   - Campos: nome, imagem (estática), função, departamento, status
+   - Validação em tempo real
+   - Confirmação de ações críticas
+   - Integração com sistema de permissões
+
+2. **User Invite Modal**
+   - Interface ultra-prática e gostosa de usar
+   - Campo único: email
+   - Validação de email em tempo real
+   - Feedback visual imediato
+   - Processo simplificado e rápido
+
+3. **Modal Management System**
+   - Gerenciamento de estado dos modais
+   - Prevenção de múltiplos modais
+   - Navegação por teclado
+   - Animações suaves e profissionais
+   - Responsividade para mobile/desktop
+
+4. **Backend Integration**
+   - Endpoints para edição de usuários
+   - Endpoints para convite de usuários
+   - Validação de dados
+   - Tratamento de erros
+   - Log de ações administrativas
+
 ### 🆕 CRITICAL PRIORITY: Login Screen Implementation
 1. **Professional Login Interface**
    - Clean, modern design that builds trust
@@ -468,6 +604,16 @@
 - [ ] Task 1.6: UX/UI Enhancements e Acessibilidade
 - [ ] Task 1.7: Testes e Validação
 
+### 🆕 NEW PRIORITY: User Management Modals Implementation
+- [x] Task 2.1: User Edit Modal Design & Architecture
+- [x] Task 2.2: User Edit Modal Core Implementation
+- [x] Task 2.3: User Invite Modal Design & Architecture
+- [x] Task 2.4: User Invite Modal Core Implementation
+- [x] Task 2.5: Confirmation Dialogs Implementation
+- [ ] Task 2.6: Backend Integration & API Endpoints
+- [ ] Task 2.7: UX/UI Enhancements & Validation
+- [ ] Task 2.8: Testing & Quality Assurance
+
 ### ✅ Completed Tasks
 - [x] Project initialization and setup
 - [x] Technical architecture planning
@@ -502,6 +648,62 @@
 - [ ] Phase 3: Advanced Features
 
 ## Current Status / Progress Tracking
+
+### 🆕 NEW PRIORITY: User Management Modals Implementation - IN PROGRESS
+
+**Current Status:** Tasks 2.1, 2.2, 2.3, and 2.4 completed successfully! Modais de edição e convite de usuários implementados e funcionais.
+
+**Completed Tasks:**
+1. ✅ **Task 2.1: User Edit Modal Design & Architecture** - COMPLETE
+   - Design system para modal de edição criado
+   - Arquitetura de componentes modular
+   - Schema de validação Zod implementado
+   - Componente base Modal reutilizável
+
+2. ✅ **Task 2.2: User Edit Modal Core Implementation** - COMPLETE
+   - Modal de edição funcional com formulário completo
+   - Validação em tempo real com Zod
+   - Componente UserAvatar com indicador de status
+   - Estados de loading e tratamento de erros
+
+3. ✅ **Task 2.3: User Invite Modal Design & Architecture** - COMPLETE
+   - Design ultra-prático para modal de convite
+   - Interface minimalista com campo único
+   - Schema de validação para email
+   - Experiência simplificada e focada
+
+4. ✅ **Task 2.4: User Invite Modal Core Implementation** - COMPLETE
+   - Modal de convite funcional com campo único
+   - Validação de email em tempo real
+   - Feedback visual imediato e animações
+   - Suporte a Enter para envio rápido
+
+5. ✅ **Task 2.5: Confirmation Dialogs Implementation** - COMPLETE
+   - Confirmação para exclusão de usuários (individual e em lote)
+   - Confirmação para cancelamento de convites
+   - Integração com componente ConfirmDialog existente
+   - Hook useConfirmDialog para gerenciamento de estado
+   - Tratamento de erros e feedback ao usuário
+
+**In Progress:**
+6. 🔄 **Task 2.6: Backend Integration & API Endpoints** - READY TO START
+   - Endpoints para edição de usuários
+   - Endpoints para convite de usuários
+   - Validação de dados no backend
+   - Tratamento de erros
+
+**Pending:**
+6. ⏳ **Task 2.6: UX/UI Enhancements & Validation** - PENDING
+   - Melhorias de UX
+   - Validação robusta
+   - Feedback visual
+   - Animações suaves
+
+7. ⏳ **Task 2.7: Testing & Quality Assurance** - PENDING
+   - Testes unitários
+   - Testes de integração
+   - Testes de acessibilidade
+   - Testes de performance
 
 ### 🆕 NEW PRIORITY: Login Screen Implementation - IN PROGRESS
 
@@ -660,6 +862,141 @@
 
 ## Executor's Feedback or Assistance Requests
 
+### 🆕 EXECUTOR'S FEEDBACK: User Management Modals Implementation Progress
+
+**Current Status:** Tasks 2.1, 2.2, 2.3, and 2.4 completed successfully! Modais de edição e convite de usuários implementados e funcionais.
+
+**What was accomplished:**
+
+#### Task 2.1: User Edit Modal Design & Architecture ✅ COMPLETE
+- **Modal Design System:** Criado componente base Modal reutilizável
+- **Component Architecture:** Arquitetura modular com componentes separados
+- **Form Validation Schema:** Implementado schemas Zod para validação
+- **User Avatar Component:** Criado componente UserAvatar com indicador de status
+- **Responsive Design:** Design responsivo para mobile/desktop
+
+#### Task 2.2: User Edit Modal Core Implementation ✅ COMPLETE
+- **Edit Form:** Formulário completo com campos: nome, função, departamento, status
+- **Real-time Validation:** Validação em tempo real com feedback visual
+- **User Avatar Integration:** Integração com componente UserAvatar
+- **Loading States:** Estados de loading durante operações
+- **Error Handling:** Tratamento robusto de erros
+
+#### Task 2.3: User Invite Modal Design & Architecture ✅ COMPLETE
+- **Ultra-practical Interface:** Design focado em praticidade e simplicidade
+- **Single Field Design:** Campo único de email para máxima eficiência
+- **Visual Feedback:** Feedback visual imediato e animações suaves
+- **Simplified Flow:** Fluxo simplificado e rápido
+
+#### Task 2.4: User Invite Modal Core Implementation ✅ COMPLETE
+- **Email Validation:** Validação de email em tempo real
+- **Success Animation:** Animação de sucesso com auto-close
+- **Keyboard Support:** Suporte a Enter para envio rápido
+- **Error Handling:** Tratamento de erros de convite
+
+**Technical Achievements:**
+- Todos os componentes compilam com sucesso
+- Design responsivo com animações suaves usando Framer Motion
+- Validação robusta com Zod schemas
+- Componente base Modal reutilizável
+- UserAvatar com indicador de status visual
+- Interface ultra-prática para convite
+- Suporte a navegação por teclado
+- Estados de loading e tratamento de erros
+- Type-safe implementation com TypeScript
+- **UX Fixes:** Ajustado tamanho do modal e avatar para melhor proporção
+
+**Files Created:**
+- `client/src/schemas/userSchemas.ts` - Schemas de validação Zod
+- `client/src/components/ui/Modal.tsx` - Componente base de modal
+- `client/src/components/users/UserAvatar.tsx` - Componente de avatar
+- `client/src/components/users/modals/EditUserModal.tsx` - Modal de edição
+- `client/src/components/users/modals/InviteUserModal.tsx` - Modal de convite
+- `client/src/components/users/modals/index.ts` - Exports dos modais
+- `client/src/components/users/UserModalsExample.tsx` - Componente de exemplo
+
+**Ready for:** Task 2.5 (Backend Integration & API Endpoints) implementation
+
+**Next Steps:** 
+1. Implement Task 2.5: Backend Integration & API Endpoints
+2. Proceed with Task 2.6: UX/UI Enhancements & Validation
+3. Complete Task 2.7: Testing & Quality Assurance
+4. Integrate modais com o sistema existente
+
+### 🆕 PLANNER'S FEEDBACK: User Management Modals Implementation Planning
+
+**Current Status:** Planejamento completo dos modais de edição e convite de usuários. Análise detalhada de requisitos e arquitetura definida.
+
+**What was planned:**
+
+#### Task 2.1: User Edit Modal Design & Architecture - PLANNED
+- **Modal Design System:** Interface limpa e focada para edição de usuários
+- **Component Architecture:** Arquitetura modular e reutilizável
+- **Form Validation Schema:** Validação robusta com Zod
+- **Permission Integration:** Integração com sistema de permissões existente
+- **Responsive Design:** Design responsivo para mobile/desktop
+
+#### Task 2.2: User Edit Modal Core Implementation - PLANNED
+- **Edit Form:** Formulário com campos: nome, imagem (estática), função, departamento, status
+- **Real-time Validation:** Validação em tempo real com feedback visual
+- **User Service Integration:** Integração com userService existente
+- **Loading States:** Estados de loading durante operações
+- **Error Handling:** Tratamento robusto de erros
+
+#### Task 2.3: User Invite Modal Design & Architecture - PLANNED
+- **Ultra-practical Interface:** Design focado em praticidade e simplicidade
+- **Single Field Design:** Campo único de email para máxima eficiência
+- **Visual Feedback:** Feedback visual imediato e claro
+- **Simplified Flow:** Fluxo simplificado e rápido
+
+#### Task 2.4: User Invite Modal Core Implementation - PLANNED
+- **Email Validation:** Validação de email em tempo real
+- **Invite Service:** Serviço para envio de convites
+- **Success Feedback:** Feedback de sucesso claro
+- **Error Handling:** Tratamento de erros de convite
+
+#### Task 2.5: Backend Integration & API Endpoints - PLANNED
+- **User Update Endpoints:** Endpoints para atualização de usuários
+- **Invite Endpoints:** Endpoints para envio de convites
+- **Data Validation:** Validação de dados no backend
+- **Security Measures:** Medidas de segurança e permissões
+
+#### Task 2.6: UX/UI Enhancements & Validation - PLANNED
+- **Enhanced UX:** Melhorias de experiência do usuário
+- **Robust Validation:** Validação robusta e confiável
+- **Visual Feedback:** Feedback visual claro e consistente
+- **Smooth Animations:** Animações suaves e profissionais
+
+#### Task 2.7: Testing & Quality Assurance - PLANNED
+- **Unit Testing:** Testes unitários para componentes
+- **Integration Testing:** Testes de integração com API
+- **Accessibility Testing:** Testes de acessibilidade
+- **Performance Testing:** Testes de performance
+
+**Technical Architecture:**
+- **Frontend:** React + TypeScript + Tailwind CSS + Framer Motion
+- **Backend:** NestJS + MongoDB + JWT Authentication
+- **Validation:** Zod schemas for type-safe validation
+- **State Management:** React hooks and context
+- **Modal Management:** Custom modal system with focus management
+- **API Integration:** RESTful API with proper error handling
+
+**Success Criteria:**
+- Interface intuitiva e responsiva para edição de usuários
+- Processo de convite simplificado e prático
+- Validação robusta de dados em tempo real
+- Integração perfeita com o sistema de permissões
+- Experiência de usuário fluida e profissional
+- Suporte a diferentes tipos de usuário (gestores e colaboradores)
+
+**Ready for:** Task 2.1 (User Edit Modal Design & Architecture) implementation
+
+**Next Steps:** 
+1. Implement Task 2.1: User Edit Modal Design & Architecture
+2. Proceed with Task 2.2: User Edit Modal Core Implementation
+3. Continue with Task 2.3: User Invite Modal Design & Architecture
+4. Complete the modal implementation cycle
+
 ### 🆕 EXECUTOR'S FEEDBACK: Login Screen Implementation Progress
 
 **Current Status:** Tasks 0.1 and 0.2 completed successfully! Login screen is functional and ready for testing.
@@ -766,3 +1103,10 @@
 - **Progress Tracking:** Regular updates to scratchpad help maintain project momentum
 - **Technical Debt:** Addressing issues early prevents accumulation of technical debt
 - **User Feedback:** Regular testing and feedback loops improve final product quality
+
+### 🆕 User Management Modals Lessons
+- **Modal Design:** Modais menores (md vs lg) proporcionam melhor experiência visual
+- **Form Validation:** Zod validation com schemas reutilizáveis melhora consistência
+- **Confirmation Dialogs:** Confirmações para ações perigosas são essenciais para UX
+- **Component Reusability:** Componentes base (Modal, ConfirmDialog) facilitam desenvolvimento
+- **Type Safety:** Interfaces TypeScript bem definidas previnem erros de compilação

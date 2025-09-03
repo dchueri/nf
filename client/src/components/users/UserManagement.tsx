@@ -31,6 +31,8 @@ import { UserHeader } from './UserHeader'
 import { UserActions } from './UserActions'
 import { UserFilters } from './UserFilters'
 import { UserActionTable } from './UserActionTable'
+import { EditUserModal, InviteUserModal } from './modals'
+import { ConfirmDialog, useConfirmDialog } from '../ui/ConfirmDialog'
 
 interface UserManagementProps {
   companyId?: string
@@ -46,6 +48,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false)
+  const [isInviteUserModalOpen, setIsInviteUserModalOpen] = useState(false)
   const [pagination, setPagination] = useState<{
     page: number
     limit: number
@@ -62,6 +67,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const { page, limit, total, totalPages } = pagination
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
+  
+  // Confirmação para ações perigosas
+  const confirmDialog = useConfirmDialog()
 
   useEffect(() => {
     loadUsers()
@@ -124,6 +132,27 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   ) => {
     if (selectedUsers.size === 0) return
 
+    // Se for remoção, pedir confirmação
+    if (operation === 'remove') {
+      const userCount = selectedUsers.size
+      const userText = userCount === 1 ? 'usuário' : 'usuários'
+      
+      confirmDialog.confirm(
+        'Excluir Usuários',
+        `Tem certeza que deseja excluir ${userCount} ${userText}? Esta ação não poderá ser desfeita.`,
+        () => executeBulkOperation(operation),
+        'danger'
+      )
+      return
+    }
+
+    // Para outras operações, executar diretamente
+    await executeBulkOperation(operation)
+  }
+
+  const executeBulkOperation = async (
+    operation: BulkUserOperation['operation']
+  ) => {
     try {
       const bulkOp: BulkUserOperation = {
         operation,
@@ -183,6 +212,38 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     )
   }
 
+  const handleUserAction = (userId: string, action: string) => {
+    if (action === 'edit') {
+      setSelectedUser(users.find((user) => user._id === userId) || null)
+      setIsEditUserModalOpen(true)
+      return
+    } 
+    if (action === 'remove') {
+      // Para remoção individual, selecionar apenas este usuário e executar bulk operation
+      setSelectedUsers(new Set([userId]))
+      handleBulkOperation('remove')
+      return
+    }
+    if (action === 'cancel-invite') {
+      const user = users.find((u) => u._id === userId)
+      confirmDialog.confirm(
+        'Cancelar Convite',
+        `Tem certeza que deseja cancelar o convite para ${user?.name || user?.email}?`,
+        async () => {
+          try {
+            await userService.cancelInvitation(userId)
+            await loadUsers()
+          } catch (error) {
+            console.error('Error canceling invitation:', error)
+            setError('Erro ao cancelar convite')
+          }
+        },
+        'warning'
+      )
+      return
+    }
+  }
+
   return (
     <div
       className={cn('bg-white rounded-lg border border-gray-200', className)}
@@ -191,6 +252,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         users={users}
         showFilters={showFilters}
         setShowFilters={setShowFilters}
+        setIsInviteUserModalOpen={setIsInviteUserModalOpen}
       />
       <UserActions
         searchQuery={searchQuery}
@@ -216,6 +278,29 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         limit={limit}
         setPagination={setPagination}
         users={users}
+        onAction={handleUserAction}
+      />
+      <EditUserModal
+        isOpen={isEditUserModalOpen}
+        setSelectedUser={setSelectedUser}
+        user={selectedUser || null}
+      />
+      <InviteUserModal
+        isOpen={isInviteUserModalOpen}
+        onClose={() => {
+          setIsInviteUserModalOpen(false)
+          loadUsers()
+        }}
+      />
+      
+      {/* Dialog de confirmação */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={confirmDialog.close}
+        onConfirm={confirmDialog.handleConfirm}
+        title={confirmDialog.config?.title || ''}
+        message={confirmDialog.config?.message || ''}
+        variant={confirmDialog.config?.variant || 'danger'}
       />
     </div>
   )

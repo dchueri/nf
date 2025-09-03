@@ -1,4 +1,4 @@
-import { User, UserRole } from '../types/user'
+import { User, UserRole, UserStatus } from '../types/user'
 import { request } from '../utils/http'
 
 // Interfaces para as operações de autenticação
@@ -252,6 +252,7 @@ export const authUtils = {
       name: authUser.name,
       email: authUser.email,
       role: authUser.role,
+      status: authUser.status as UserStatus,
       companyId: authUser.companyId || '',
       monthsWithInvoices: [],
       createdAt: new Date().toISOString(),

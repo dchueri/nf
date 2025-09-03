@@ -8,7 +8,8 @@ export enum UserRole {
 export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
-  PENDING = 'pending'
+  PENDING = 'pending',
+  SUSPENDED = 'suspended'
 }
 
 export interface User {
@@ -16,6 +17,7 @@ export interface User {
   name: string
   email: string
   role: UserRole
+  status: UserStatus
   monthsWithInvoices: {
     month: string
     invoices: number

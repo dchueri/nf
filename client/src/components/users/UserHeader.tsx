@@ -6,11 +6,13 @@ import { User } from '../../types/user'
 export const UserHeader = ({
   users,
   showFilters,
-  setShowFilters
+  setShowFilters,
+  setIsInviteUserModalOpen
 }: {
   users: User[]
   showFilters: boolean
   setShowFilters: (showFilters: boolean) => void
+  setIsInviteUserModalOpen: (isInviteUserModalOpen: boolean) => void
 }) => {
   const usersPlural = users.length === 1 ? 'usuário' : 'usuários'
   const foundPlural = users.length === 1 ? 'encontrado' : 'encontrados'
@@ -36,7 +38,7 @@ export const UserHeader = ({
             <span>Filtros</span>
           </Button>
 
-          <Button variant="primary" className="flex items-center space-x-2">
+          <Button variant="primary" className="flex items-center space-x-2" onClick={() => setIsInviteUserModalOpen(true)}>
             <UserPlusIcon className="h-4 w-4" />
             <span>Convidar Usuário</span>
           </Button>

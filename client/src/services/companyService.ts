@@ -1,4 +1,4 @@
-import { request } from '../utils/http'
+import { request, Response } from '../utils/http'
 
 // Interfaces para as operações de empresa
 export interface CreateCompanyData {
@@ -49,7 +49,9 @@ export interface CompanyResponse {
 // Service principal de empresas
 export const companyService = {
   // Criar nova empresa
-  async createCompany(companyData: CreateCompanyData): Promise<CompanyResponse> {
+  async createCompany(
+    companyData: CreateCompanyData
+  ): Promise<CompanyResponse> {
     const response = await request<CompanyResponse>('/companies', {
       method: 'POST',
       data: companyData
@@ -74,7 +76,10 @@ export const companyService = {
   },
 
   // Atualizar empresa
-  async updateCompany(companyId: string, updateData: Partial<CreateCompanyData>): Promise<Company> {
+  async updateCompany(
+    companyId: string,
+    updateData: Partial<CreateCompanyData>
+  ): Promise<Company> {
     const response = await request<Company>(`/companies/${companyId}`, {
       method: 'PATCH',
       data: updateData
@@ -95,26 +100,38 @@ export const companyService = {
   },
 
   // Validar CNPJ
-  async validateCNPJ(cnpj: string): Promise<{ isValid: boolean; message?: string }> {
+  async validateCNPJ(
+    cnpj: string
+  ): Promise<Response<{ isValid: boolean; message?: string }>> {
     try {
-      const response = await request<{ isValid: boolean; message?: string }>('/companies/validate-cnpj', {
-        method: 'POST',
-        data: { cnpj }
-      })
+      const response = await request<{ isValid: boolean; message?: string }>(
+        '/companies/validate-cnpj',
+        {
+          method: 'POST',
+          data: { cnpj }
+        }
+      )
       return response
     } catch (error) {
-      return { isValid: false, message: 'Erro ao validar CNPJ' }
+      return {
+        data: { isValid: false, message: 'Erro ao validar CNPJ' },
+        message: 'Erro ao validar CNPJ'
+      }
     }
   },
 
   // Buscar empresas (para admin)
-  async getCompanies(page: number = 1, limit: number = 10, search?: string): Promise<{
+  async getCompanies(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Promise<Response<{
     docs: Company[]
     total: number
     page: number
     limit: number
     totalPages: number
-  }> {
+  }>> {
     const params = new URLSearchParams()
     params.append('page', page.toString())
     params.append('limit', limit.toString())
@@ -126,7 +143,10 @@ export const companyService = {
   },
 
   // Ativar/desativar empresa
-  async toggleCompanyStatus(companyId: string, status: 'active' | 'inactive' | 'suspended'): Promise<Company> {
+  async toggleCompanyStatus(
+    companyId: string,
+    status: 'active' | 'inactive' | 'suspended'
+  ): Promise<Response<Company>> {
     return request<Company>(`/companies/${companyId}/status`, {
       method: 'PATCH',
       data: { status }
@@ -134,13 +154,15 @@ export const companyService = {
   },
 
   // Obter estatísticas da empresa
-  async getCompanyStats(companyId: string): Promise<{
-    totalUsers: number
-    totalInvoices: number
-    pendingInvoices: number
-    approvedInvoices: number
-    totalAmount: number
-  }> {
+  async getCompanyStats(companyId: string): Promise<
+    Response<{
+      totalUsers: number
+      totalInvoices: number
+      pendingInvoices: number
+      approvedInvoices: number
+      totalAmount: number
+    }>
+  > {
     return request(`/companies/${companyId}/stats`, {
       method: 'GET'
     })
@@ -157,7 +179,10 @@ export const companyUtils = {
   // Formatar CNPJ para exibição
   formatCNPJ: (cnpj: string): string => {
     const cleaned = cnpj.replace(/\D/g, '')
-    return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
+    return cleaned.replace(
+      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+      '$1.$2.$3/$4-$5'
+    )
   },
 
   // Limpar CNPJ (remover formatação)

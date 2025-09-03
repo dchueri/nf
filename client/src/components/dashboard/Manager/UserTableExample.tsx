@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { UserTable } from './UserTable'
 import { UserFilters, UserFilterType } from './UserFilters'
-import { User, UserRole } from '../../../types/user'
+import { User, UserRole, UserStatus } from '../../../types/user'
 import { InvoiceStatus } from '../../../types/invoice'
 
 // Exemplo de como usar a tabela de usuários em outro contexto
@@ -16,6 +16,7 @@ export const UserTableExample: React.FC = () => {
       name: 'João Silva',
       email: 'joao@example.com',
       role: UserRole.MANAGER,
+      status: UserStatus.ACTIVE,
       companyId: 'company-1',
       department: 'TI',
       monthsWithInvoices: [
@@ -35,6 +36,7 @@ export const UserTableExample: React.FC = () => {
       name: 'Maria Santos',
       email: 'maria@example.com',
       role: UserRole.COLLABORATOR,
+      status: UserStatus.ACTIVE,
       companyId: 'company-1',
       department: 'Marketing',
       monthsWithInvoices: [

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -14,6 +15,15 @@ import { PaginatedResponseDto } from 'src/common/dto/response.dto';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async cancelInvitation(userId: string, companyId: string): Promise<void> {
+    const user = await this.userModel.findOne({ _id: userId, status: UserStatus.PENDING, companyId }).exec();
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado ou não possui um convite pendente');
+    }
+
+    await this.userModel.deleteOne({ _id: userId }).exec();
+  }
 
   async getUsersStatsByMonth(
     companyId: string,

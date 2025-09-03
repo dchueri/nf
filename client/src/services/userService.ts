@@ -61,6 +61,19 @@ export interface UserStatsDashboard {
 
 // Service principal de usuários
 export const userService = {
+  async cancelInvitation(userId: string): Promise<Response<User>> {
+    return request<User>(`/users/invite/${userId}`, {
+      method: 'DELETE'
+    })
+  },
+
+  async inviteUser(email: string): Promise<Response<User>> {
+    return request<User>(`/users/invite`, {
+      method: 'POST',
+      data: { email }
+    })
+  },
+
   async getUserStats(referenceMonth: string): Promise<Response<UserStatsDashboard>> {
     return request<UserStatsDashboard>(`/users/stats/${referenceMonth}`)
   },

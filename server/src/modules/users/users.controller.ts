@@ -114,6 +114,14 @@ export class UsersController {
     );
   }
 
+  @Delete('invite/:userId')
+  @ApiOperation({ summary: 'Cancelar convite' })
+  @ApiResponse({ status: 204, description: 'Convite cancelado' })
+  @ApiResponse({ status: 404, description: 'Convite não encontrado' })
+  cancelInvitation(@Param('userId') userId: string, @Request() req) {
+    return this.usersService.cancelInvitation(userId, req.user.companyId);
+  }
+
   @Patch(':id/status')
   @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Atualizar status do usuário' })
