@@ -1,5 +1,10 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
+export interface Response<T> {
+  data: T
+  message: string
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Configuração base do axios
@@ -54,10 +59,11 @@ api.interceptors.response.use(
 export const request = async <T>(
   endpoint: string,
   options: AxiosRequestConfig = {}
-): Promise<T> => {
-    const response = await api.request<T>({
+): Promise<{ data: T, message: string }> => {
+    const response = await api.request<T, { data: T, message: string }>({
       url: endpoint,
       ...options,
     });
-    return response.data;
+    console.log('response', response)
+    return response;
 };

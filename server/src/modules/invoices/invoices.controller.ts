@@ -38,7 +38,7 @@ export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post()
-  @Roles(UserRole.COMPANY, UserRole.COLLABORATOR)
+  @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
   @ApiOperation({ summary: 'Criar nova nota fiscal' })
   @ApiResponse({ status: 201, description: 'Nota fiscal criada com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -47,7 +47,7 @@ export class InvoicesController {
   }
 
   @Post('upload')
-  @Roles(UserRole.COMPANY, UserRole.COLLABORATOR)
+  @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload de arquivo de nota fiscal' })
   @ApiConsumes('multipart/form-data')
@@ -74,7 +74,7 @@ export class InvoicesController {
   }
 
   @Get()
-  @Roles(UserRole.COMPANY, UserRole.COLLABORATOR)
+  @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
   @ApiOperation({ summary: 'Listar notas fiscais' })
   @ApiResponse({ status: 200, description: 'Lista de notas fiscais' })
   findAll(@Request() req, @Query() filters: any) {
@@ -82,7 +82,7 @@ export class InvoicesController {
   }
 
   @Get('summary/:year/:month')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Resumo mensal de notas fiscais' })
   @ApiResponse({ status: 200, description: 'Resumo mensal' })
   getMonthlySummary(
@@ -98,7 +98,7 @@ export class InvoicesController {
   }
 
   @Get('overdue')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Notas fiscais em atraso' })
   @ApiResponse({ status: 200, description: 'Lista de notas em atraso' })
   getOverdueInvoices(@Request() req) {
@@ -130,7 +130,7 @@ export class InvoicesController {
   }
 
   @Patch(':id/status')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Atualizar status da nota fiscal' })
   @ApiResponse({ status: 200, description: 'Status atualizado' })
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })

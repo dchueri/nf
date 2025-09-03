@@ -112,7 +112,8 @@ const filterUsers = ({
   selectedFilter,
   selectedMonth
 }: UserTableFilters) => {
-  return users.filter((user) => {
+  console.log('users', users)
+  return users?.filter((user) => {
     if (selectedFilter === 'all') return true
     const userActualMonth = getUserActualMonth(user, selectedMonth)
     return userActualMonth?.status === selectedFilter

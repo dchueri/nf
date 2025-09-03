@@ -25,15 +25,9 @@ export class Company extends Document {
   phone: string;
 
   @Prop()
-  website?: string;
+  email?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  ownerId: Types.ObjectId;
-
-  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
-  collaborators: Types.ObjectId[];
-
-  @Prop({ default: {} })
+  @Prop({ default: {}, type: Object })
   settings: {
     reminderSchedule: {
       firstReminder: number; // days before deadline
@@ -44,7 +38,12 @@ export class Company extends Document {
     invoiceDeadline: number; // day of month
     autoReminders: boolean;
     emailNotifications: boolean;
-    whatsappNotifications: boolean;
+    deadline: {
+      strategy: 'fixed_day' | 'start_month' | 'end_month';
+      day: number;
+      daysFromStart: number;
+      daysFromEnd: number;
+    };
   };
 
   @Prop({ default: 'active' })
@@ -55,5 +54,5 @@ export const CompanySchema = SchemaFactory.createForClass(Company);
 
 // Indexes for better query performance
 CompanySchema.index({ cnpj: 1 });
-CompanySchema.index({ ownerId: 1 });
+CompanySchema.index({ email: 1 });
 CompanySchema.index({ status: 1 });

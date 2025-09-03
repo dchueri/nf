@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User } from './schemas/user.schema';
+import { User, UserStatus } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InvoiceStatus } from '../invoices/schemas/invoice.schema';
@@ -61,8 +61,21 @@ export class UsersService {
     return user;
   }
 
-  async findByCompanyPaginated(companyId: string, page: number, limit: number, search: string): Promise<PaginatedResponseDto<User>> {
-    const users = await this.userModel.find({ companyId, $or: [{ name: { $regex: search, $options: 'i' } }, { email: { $regex: search, $options: 'i' } }] })
+  async findByCompanyPaginated(
+    companyId: string,
+    page: number = 1,
+    limit: number = 10,
+    search: string,
+  ): Promise<PaginatedResponseDto<User>> {
+    const filters: any = { companyId };
+    if (search) {
+      filters.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+    const users = await this.userModel
+      .find(filters)
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
@@ -150,11 +163,7 @@ export class UsersService {
     return updatedUser;
   }
 
-  async inviteCollaborator(
-    email: string,
-    companyId: string,
-    invitedBy: string,
-  ): Promise<User> {
+  async inviteCollaborator(email: string, companyId: string): Promise<User> {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('Usuário com este email já existe');
@@ -163,11 +172,10 @@ export class UsersService {
     const createUserDto: CreateUserDto = {
       email,
       name: email.split('@')[0],
-      password: Math.random().toString(36).slice(-8),
+      password: '123456',
       role: 'collaborator' as any,
       companyId,
-      invitedBy: invitedBy as any,
-      status: 'pending' as any,
+      status: UserStatus.PENDING,
     };
 
     return this.create(createUserDto);

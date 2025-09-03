@@ -2,6 +2,12 @@ import { User, UserRole } from '../types/user'
 import { request } from '../utils/http'
 
 // Interfaces para as operações
+
+interface Response<T> {
+  data: T
+  message: string
+}
+
 export interface CreateUserData {
   name: string
   email: string
@@ -55,13 +61,12 @@ export interface UserStatsDashboard {
 
 // Service principal de usuários
 export const userService = {
-  async getUserStats(referenceMonth: string): Promise<UserStatsDashboard> {
-    console.log(`/users/stats/${referenceMonth}`)
+  async getUserStats(referenceMonth: string): Promise<Response<UserStatsDashboard>> {
     return request<UserStatsDashboard>(`/users/stats/${referenceMonth}`)
   },
 
   // Buscar usuários para dashboard do gestor
-  async getUsers(page: number, limit: number, search: string): Promise<UserListResponse> {
+  async getUsers(page: number, limit: number, search: string): Promise<Response<UserListResponse>> {
     return request<UserListResponse>(`/users`, {
       method: 'GET',
       params: {
@@ -77,7 +82,7 @@ export const userService = {
     companyId: string,
     userId: string,
     referenceMonth: string
-  ): Promise<UserListResponse> {
+  ): Promise<Response<UserListResponse>> {
     const params = new URLSearchParams({
       companyId,
       userId,
@@ -88,7 +93,7 @@ export const userService = {
   },
 
   // Ativar/desativar usuário
-  async toggleUserStatus(userId: string, active: boolean): Promise<User> {
+  async toggleUserStatus(userId: string, active: boolean): Promise<Response<User>> {
     return request<User>(`/users/${userId}/status`, {
       method: 'PATCH',
       data: { active }
@@ -96,7 +101,7 @@ export const userService = {
   },
 
   // Alterar papel/role do usuário
-  async changeUserRole(userId: string, newRole: UserRole): Promise<User> {
+  async changeUserRole(userId: string, newRole: UserRole): Promise<Response<User>> {
     return request<User>(`/users/${userId}/role`, {
       method: 'PATCH',
       data: { role: newRole }
@@ -104,7 +109,7 @@ export const userService = {
   },
 
   // Buscar usuários para autocomplete
-  async searchUsers(query: string, companyId: string): Promise<User[]> {
+  async searchUsers(query: string, companyId: string): Promise<Response<User[]>> {
     const params = new URLSearchParams({
       q: query,
       companyId,
@@ -119,7 +124,7 @@ export const userService = {
     companyId: string,
     userIds: string[],
     message?: string
-  ): Promise<{ success: boolean; sentCount: number }> {
+  ): Promise<Response<{ success: boolean; sentCount: number }>> {
     return request<{ success: boolean; sentCount: number }>(
       '/users/reminders',
       {
@@ -138,7 +143,7 @@ export const userService = {
     companyId: string,
     format: 'csv' | 'excel' | 'pdf' = 'csv',
     filters: UserFilters = {}
-  ): Promise<Blob> {
+  ): Promise<Response<Blob>> {
     const params = new URLSearchParams()
     params.append('companyId', companyId)
     params.append('format', format)
@@ -166,7 +171,7 @@ export const userService = {
   async importUsers(
     companyId: string,
     file: File
-  ): Promise<{ success: boolean; importedCount: number; errors: string[] }> {
+  ): Promise<Response<{ success: boolean; importedCount: number; errors: string[] }>> {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('companyId', companyId)
@@ -200,7 +205,7 @@ export const userService = {
   async getUsersForTeams(
     companyId: string,
     excludeUserIds: string[] = []
-  ): Promise<User[]> {
+  ): Promise<Response<User[]>> {
     const params = new URLSearchParams({
       companyId,
       excludeUserIds: excludeUserIds.join(',')
@@ -213,7 +218,7 @@ export const userService = {
   async getUsersWithPermissions(
     companyId: string,
     permissions: string[]
-  ): Promise<User[]> {
+  ): Promise<Response<User[]>> {
     const params = new URLSearchParams({
       companyId,
       permissions: permissions.join(',')

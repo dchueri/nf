@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
   };
 
   const sidebarClasses = cn(
-    'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out',
+    'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-150 ease-in-out',
     {
       'translate-x-0': isOpen,
       '-translate-x-full': !isOpen,

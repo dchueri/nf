@@ -19,7 +19,7 @@ export class InvoicesService {
       ...createInvoiceDto,
       submittedBy: userId,
       companyId,
-      status: InvoiceStatus.PENDING,
+      status: InvoiceStatus.SUBMITTED,
     });
 
     return invoice.save();
@@ -202,11 +202,9 @@ export class InvoicesService {
 
     const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
     const statusCounts = {
-      pending: invoices.filter(i => i.status === InvoiceStatus.PENDING).length,
       submitted: invoices.filter(i => i.status === InvoiceStatus.SUBMITTED).length,
       approved: invoices.filter(i => i.status === InvoiceStatus.APPROVED).length,
       rejected: invoices.filter(i => i.status === InvoiceStatus.REJECTED).length,
-      paid: invoices.filter(i => i.status === InvoiceStatus.PAID).length,
     };
 
     return {
@@ -245,7 +243,7 @@ export class InvoicesService {
       .find({
         companyId,
         dueDate: { $lt: today },
-        status: { $in: [InvoiceStatus.PENDING, InvoiceStatus.SUBMITTED] }
+        status: { $in: [InvoiceStatus.SUBMITTED] }
       })
       .populate('submittedBy', 'name email')
       .sort({ dueDate: 1 })

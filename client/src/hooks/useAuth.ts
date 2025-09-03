@@ -25,14 +25,13 @@ export const useAuth = () => {
       
       // Converter dados do usuário para o formato do contexto
        console.log('response', response)
-      const user = authUtils.formatUserForContext(response.user)
+      const user = authUtils.formatUserForContext(response.data.user)
       console.log('user', user)
       // Update user context
       setUser(user)
 
       // Navigate to dashboard
       navigate('/')
-    throw new Error('Erro ao fazer login')
     } catch (error) {
       // Handle authentication errors
       if (error instanceof Error) {

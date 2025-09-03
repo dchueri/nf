@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { SkipLinks } from '../ui/SkipLink';
 
 export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,6 +30,9 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Skip Links for Accessibility */}
+      <SkipLinks />
+      
       {/* Sidebar */}
       <Sidebar 
         isOpen={sidebarOpen} 
@@ -42,7 +46,11 @@ export const AppLayout: React.FC = () => {
         <Header onMenuClick={toggleSidebar} />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+        <main 
+          id="main-content"
+          className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50"
+          tabIndex={-1}
+        >
           <div className="container mx-auto px-4 py-6">
             <Outlet />
           </div>

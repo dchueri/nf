@@ -1,27 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { ManagerDashboard } from '../components/dashboard/Manager/ManagerDashboard';
 import { CollaboratorDashboard } from '../components/dashboard/CollaboratorDashboard';
+import { PageLoader, ContentLoader } from '../components/ui/LoadingSpinner';
+import { FeedbackMessage } from '../components/ui/FeedbackMessage';
 
 export const Dashboard: React.FC = () => {
   const { user, isLoading } = useUser();
+  const { shouldRedirectToOnboarding } = useOnboarding();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <PageLoader text="Carregando dashboard..." />;
   }
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-lg font-medium text-gray-900">Usuário não autenticado</h2>
-        <p className="text-gray-500">Faça login para acessar o dashboard.</p>
+      <div className="flex items-center justify-center py-12">
+        <FeedbackMessage
+          type="warning"
+          title="Usuário não autenticado"
+          message="Faça login para acessar o dashboard."
+        />
       </div>
     );
   }
+
+  // Verificar se precisa redirecionar para onboarding
+  useEffect(() => {
+    shouldRedirectToOnboarding();
+  }, [shouldRedirectToOnboarding]);
 
   if (user.role === 'manager') {
     return <ManagerDashboard />;

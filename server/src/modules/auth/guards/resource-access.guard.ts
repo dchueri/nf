@@ -36,7 +36,7 @@ export class ResourceAccessGuard implements CanActivate {
     }
 
     // Empresas podem acessar recursos da empresa se permitido
-    if (user.role === UserRole.COMPANY && options.allowCompanyResource) {
+    if (user.role === UserRole.MANAGER && options.allowCompanyResource) {
       return true;
     }
 

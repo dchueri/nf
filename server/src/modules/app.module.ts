@@ -7,7 +7,7 @@ import { databaseConfig } from '../config/database.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { InvoicesModule } from './invoices/invoices.module';
-import { TeamsModule } from './companies/teams.module';
+import { CompaniesModule } from './companies/companies.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { TeamsModule } from './companies/teams.module';
     AuthModule,
     UsersModule,
     InvoicesModule,
-    TeamsModule,
+    CompaniesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

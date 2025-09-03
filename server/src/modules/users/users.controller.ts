@@ -22,6 +22,7 @@ import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
 import { UserRole } from './schemas/user.schema';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
+import { InviteUserDto } from './dto/invite-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -104,13 +105,12 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'Convite enviado' })
   @ApiResponse({ status: 409, description: 'Email já existe' })
   inviteCollaborator(
-    @Body() body: { email: string },
+    @Body() body: InviteUserDto,
     @Request() req
   ) {
     return this.usersService.inviteCollaborator(
       body.email,
-      req.user.companyId,
-      req.user.sub
+      req.user.companyId
     );
   }
 

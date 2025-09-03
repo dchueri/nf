@@ -15,6 +15,8 @@ import { UserStats } from './UserStats'
 import { DateSelector } from './DateSelector'
 import { UserFilters, UserFilterType } from './UserFilters'
 import { UserTable } from './UserTable'
+import { StatsSkeleton, TableSkeleton } from '../../ui/SkeletonLoader'
+import { ButtonLoader } from '../../ui/LoadingSpinner'
 
 const CURRENT_MONTH = dayjs().format('YYYY-MM')
 
@@ -42,6 +44,7 @@ export const ManagerDashboard: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<UserFilterType>('all')
   const [selectedMonth, setSelectedMonth] = useState<string>(CURRENT_MONTH)
   const [loading, setLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(true)
   const [textSearch, setTextSearch] = useState<string>('')
   const [pagination, setPagination] = useState<any>({
     page: 1,
@@ -66,14 +69,21 @@ export const ManagerDashboard: React.FC = () => {
   const users = usersPage.docs
 
   useEffect(() => {
-    getUserStats(selectedMonth).then((data) => {
-      setStats(data)
+    setDataLoading(true)
+    Promise.all([
+      getUserStats(selectedMonth),
+      getUsers(pagination.page, pagination.limit, textSearch)
+    ]).then(([statsData, usersData]) => {
+      console.log('statsData', statsData)
+      console.log('usersData', usersData)
+      setStats(statsData.data)
+      setUsersPage(usersData.data)
+      setDataLoading(false)
+    }).catch((error) => {
+      console.error('Erro ao carregar dados:', error)
+      setDataLoading(false)
     })
-    getUsers(pagination.page, pagination.limit, textSearch).then((data) => {
-      console.log(data)
-      setUsersPage(data)
-    })
-  }, [selectedMonth])
+  }, [selectedMonth, pagination.page, pagination.limit, textSearch])
 
 
 
@@ -232,33 +242,54 @@ export const ManagerDashboard: React.FC = () => {
             onClick={handleSendReminders}
             disabled={loading}
           >
-            <BellIcon className="h-4 w-4 mr-2" />
-            {loading ? 'Enviando...' : 'Enviar Lembretes'}
+            {loading ? (
+              <ButtonLoader text="Enviando..." />
+            ) : (
+              <>
+                <BellIcon className="h-4 w-4 mr-2" />
+                Enviar Lembretes
+              </>
+            )}
           </Button>
           <Button onClick={handleGenerateReport} disabled={loading}>
-            <ChartBarIcon className="h-4 w-4 mr-2" />
-            {loading ? 'Gerando...' : 'Gerar Relatório'}
+            {loading ? (
+              <ButtonLoader text="Gerando..." />
+            ) : (
+              <>
+                <ChartBarIcon className="h-4 w-4 mr-2" />
+                Gerar Relatório
+              </>
+            )}
           </Button>
         </div>
       </div>
 
       <DateSelector selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} navigateMonth={navigateMonth} />
-      <UserStats stats={stats} />
+      
+      {dataLoading ? (
+        <StatsSkeleton />
+      ) : (
+        <UserStats stats={stats} />
+      )}
 
       <UserFilters
         selectedFilter={selectedFilter}
         onFilterChange={setSelectedFilter}
       />
 
-      <UserTable
-        users={users}
-        selectedMonth={selectedMonth}
-        selectedFilter={selectedFilter}
-        onUserAction={(userId, action) => {
-          console.log('User action:', userId, action)
-          // Implementar ações específicas aqui
-        }}
-      />
+      {dataLoading ? (
+        <TableSkeleton rows={5} columns={6} />
+      ) : (
+        <UserTable
+          users={users}
+          selectedMonth={selectedMonth}
+          selectedFilter={selectedFilter}
+          onUserAction={(userId, action) => {
+            console.log('User action:', userId, action)
+            // Implementar ações específicas aqui
+          }}
+        />
+      )}
     </div>
   )
 }

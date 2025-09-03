@@ -28,7 +28,7 @@ export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) {}
 
   @Post()
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Criar novo convite' })
   @ApiResponse({ status: 201, description: 'Convite criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -87,7 +87,7 @@ export class InvitationsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Cancelar convite' })
   @ApiResponse({ status: 200, description: 'Convite cancelado' })
   @ApiResponse({ status: 404, description: 'Convite não encontrado' })
@@ -96,7 +96,7 @@ export class InvitationsController {
   }
 
   @Post(':id/resend')
-  @Roles(UserRole.COMPANY)
+  @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Reenviar convite' })
   @ApiResponse({ status: 200, description: 'Convite reenviado' })
   @ApiResponse({ status: 400, description: 'Convite não está mais válido' })

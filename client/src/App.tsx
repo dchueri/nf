@@ -13,6 +13,7 @@ const Reports = lazy(() => import('./pages/Reports').then(module => ({ default: 
 const Users = lazy(() => import('./pages/Users').then(module => ({ default: module.Users })));
 const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
 const Login = lazy(() => import('./pages/auth/Login').then(module => ({ default: module.Login })));
+const CompanyOnboarding = lazy(() => import('./pages/onboarding/CompanyOnboarding').then(module => ({ default: module.CompanyOnboarding })));
 
 // Loading fallback component
 const PageLoading = () => (
@@ -42,6 +43,15 @@ function App() {
               <ProtectedRoute requireAuth={false} redirectTo="/">
                 <Suspense fallback={<PageLoading />}>
                   <Login />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            
+            {/* Onboarding route */}
+            <Route path="/onboarding" element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoading />}>
+                  <CompanyOnboarding />
                 </Suspense>
               </ProtectedRoute>
             } />

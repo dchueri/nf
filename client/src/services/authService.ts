@@ -31,7 +31,9 @@ export interface AuthResponse {
 }
 
 export interface RefreshTokenResponse {
-  access_token: string
+  data: {
+    access_token: string
+  }
 }
 
 export interface UserProfile {
@@ -46,7 +48,9 @@ export interface UserProfile {
 // Service principal de autenticação
 export const authService = {
   // Login do usuário
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+  async login(
+    credentials: LoginCredentials
+  ): Promise<{ data: AuthResponse; message: string }> {
     const response = await request<AuthResponse>('/auth/login', {
       method: 'POST',
       data: {
@@ -57,40 +61,43 @@ export const authService = {
 
     // Armazenar token baseado na opção "remember me"
     if (credentials.rememberMe) {
-      localStorage.setItem('access_token', response.access_token)
+      localStorage.setItem('access_token', response.data.access_token)
     } else {
-      sessionStorage.setItem('access_token', response.access_token)
+      sessionStorage.setItem('access_token', response.data.access_token)
     }
 
     return response
   },
 
   // Registro de novo usuário
-  async register(userData: RegisterData): Promise<AuthResponse> {
+  async register(userData: RegisterData): Promise<{ data: AuthResponse; message: string }> {
     const response = await request<AuthResponse>('/auth/register', {
       method: 'POST',
       data: userData
     })
 
     // Armazenar token após registro bem-sucedido
-    localStorage.setItem('access_token', response.access_token)
+    localStorage.setItem('access_token', response.data.access_token)
 
     return response
   },
 
   // Renovar token JWT
-  async refreshToken(): Promise<RefreshTokenResponse> {
+  async refreshToken(): Promise<{ data: RefreshTokenResponse; message: string }> {
     const response = await request<RefreshTokenResponse>('/auth/refresh', {
       method: 'POST'
     })
+    console.log('response', response)
 
     // Atualizar token armazenado
-    const currentToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+    const currentToken =
+      localStorage.getItem('access_token') ||
+      sessionStorage.getItem('access_token')
     if (currentToken) {
       if (localStorage.getItem('access_token')) {
-        localStorage.setItem('access_token', response.access_token)
+        localStorage.setItem('access_token', response.data.data.access_token)
       } else {
-        sessionStorage.setItem('access_token', response.access_token)
+        sessionStorage.setItem('access_token', response.data.data.access_token)
       }
     }
 
@@ -98,7 +105,7 @@ export const authService = {
   },
 
   // Obter perfil do usuário autenticado
-  async getProfile(): Promise<UserProfile> {
+  async getProfile(): Promise<{ data: UserProfile; message: string }> {
     return request<UserProfile>('/auth/profile', {
       method: 'GET'
     })
@@ -121,7 +128,9 @@ export const authService = {
   // Verificar se o usuário está autenticado
   async isAuthenticated(): Promise<boolean> {
     try {
-      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+      const token =
+        localStorage.getItem('access_token') ||
+        sessionStorage.getItem('access_token')
       if (!token) {
         return false
       }
@@ -137,7 +146,10 @@ export const authService = {
 
   // Obter token atual
   getCurrentToken(): string | null {
-    return localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+    return (
+      localStorage.getItem('access_token') ||
+      sessionStorage.getItem('access_token')
+    )
   },
 
   // Verificar se o token está expirado
@@ -162,7 +174,7 @@ export const authService = {
     if (this.isTokenExpired(token)) {
       try {
         const response = await this.refreshToken()
-        return response.access_token
+        return response.data.data.access_token
       } catch (error) {
         console.error('Erro ao renovar token:', error)
         await this.logout()
@@ -187,30 +199,41 @@ export const authService = {
   },
 
   // Esqueci minha senha
-  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
-    return request<{ success: boolean; message: string }>('/auth/forgot-password', {
-      method: 'POST',
-      data: { email }
-    })
+  async forgotPassword(
+    email: string
+  ): Promise<{ data: { success: boolean; message: string }; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      '/auth/forgot-password',
+      {
+        method: 'POST',
+        data: { email }
+      }
+    )
   },
 
   // Redefinir senha
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    return request<{ success: boolean; message: string }>('/auth/reset-password', {
-      method: 'POST',
-      data: { token, newPassword }
-    })
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{ data: { success: boolean; message: string }; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      '/auth/reset-password',
+      {
+        method: 'POST',
+        data: { token, newPassword }
+      }
+    )
   },
 
   // Verificar se email está disponível
-  async checkEmailAvailability(email: string): Promise<boolean> {
+  async checkEmailAvailability(email: string): Promise<{ data: boolean; message: string }> {
     try {
       await request(`/auth/check-email/${email}`, {
         method: 'GET'
       })
-      return true // Email disponível
+      return { data: true, message: 'Email disponível' } // Email disponível
     } catch (error) {
-      return false // Email já existe
+      return { data: false, message: 'Email já existe' } // Email já existe
     }
   }
 }
@@ -245,11 +268,11 @@ export const authUtils = {
   // Verificar se o usuário pode acessar recurso específico
   canAccess: (user: User, resource: string): boolean => {
     const permissions = {
-      'dashboard': [UserRole.MANAGER, UserRole.COLLABORATOR],
-      'users': [UserRole.MANAGER],
-      'reports': [UserRole.MANAGER],
-      'settings': [UserRole.MANAGER],
-      'invoices': [UserRole.MANAGER, UserRole.COLLABORATOR]
+      dashboard: [UserRole.MANAGER, UserRole.COLLABORATOR],
+      users: [UserRole.MANAGER],
+      reports: [UserRole.MANAGER],
+      settings: [UserRole.MANAGER],
+      invoices: [UserRole.MANAGER, UserRole.COLLABORATOR]
     }
 
     const allowedRoles = permissions[resource as keyof typeof permissions] || []

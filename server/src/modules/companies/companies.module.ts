@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TeamsController } from './teams.controller';
-import { TeamsService } from './teams.service';
+import { CompaniesController } from './companies.controller';
+import { CompaniesService } from './companies.service';
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
-import { Team, TeamSchema } from './schemas/team.schema';
+import { Company, CompanySchema } from './schemas/company.schema';
 import { Invitation, InvitationSchema } from './schemas/invitation.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Team.name, schema: TeamSchema },
+      { name: Company.name, schema: CompanySchema },
       { name: Invitation.name, schema: InvitationSchema },
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  controllers: [TeamsController, InvitationsController],
-  providers: [TeamsService, InvitationsService],
-  exports: [TeamsService, InvitationsService],
+  controllers: [CompaniesController, InvitationsController],
+  providers: [CompaniesService, InvitationsService],
+  exports: [CompaniesService, InvitationsService],
 })
-export class TeamsModule {}
+export class CompaniesModule {}
