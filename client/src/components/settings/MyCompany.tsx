@@ -1,112 +1,169 @@
-import React, { useState } from "react";
-import { Button } from "../ui/Button";
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import React, { useEffect, useState } from 'react'
+import { Button } from '../ui/Button'
+import { Company, useCompanyService } from 'services/companyService'
+import { useToastHelpers } from 'components/ui/Toast'
 
-interface Props {
-  name: string
-  cnpj: string
-  email: string
-  invoiceDeadline?: string // Data limite para envio das notas fiscais (formato: YYYY-MM-DD)
-}
-
-export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
+export const MyCompany = () => {
+  const [company, setCompany] = useState<Company | null>(null)
   const [formData, setFormData] = useState({
-    name: name || '',
-    cnpj: cnpj || '',
-    email: email || '',
-    invoiceDeadline: invoiceDeadline || '',
-    emailNotifications: 'enabled',
-    deadlineStrategy: 'fixed_day' as 'fixed_day' | 'start_month' | 'end_month',
-    deadlineDay: 15, // Dia fixo do mês (1-31)
-    deadlineDaysFromStart: 5, // Dias úteis do início do mês
-    deadlineDaysFromEnd: 5 // Dias úteis do fim do mês
-  });
+    name: company?.name || '',
+    cnpj: company?.cnpj || '',
+    email: company?.email || '',
+    emailNotifications: company?.settings?.emailNotifications || false,
+    deadlineStrategy:
+      company?.settings?.deadline.strategy ||
+      ('fixed_day' as 'fixed_day' | 'start_month' | 'end_month'),
+    deadlineDay: company?.settings?.deadline.day || 15, // Dia fixo do mês (1-31)
+    deadlineDaysFromStart: company?.settings?.deadline.daysFromStart || 5, // Dias úteis do início do mês
+    deadlineDaysFromEnd: company?.settings?.deadline.daysFromEnd || 5 // Dias úteis do fim do mês
+  })
+  const { getMyCompany, updateCompany } = useCompanyService()
+  const toast = useToastHelpers()
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+  useEffect(() => {
+    getMyCompany().then((response) => {
+      setCompany(response.data)
+      setFormData({
+        name: response.data.name,
+        cnpj: response.data.cnpj,
+        email: response.data.email,
+        emailNotifications: response.data.settings?.emailNotifications,
+        deadlineStrategy:
+          response.data.settings?.deadline.strategy ||
+          ('fixed_day' as 'fixed_day' | 'start_month' | 'end_month'),
+        deadlineDay: response.data.settings?.deadline.day || 15,
+        deadlineDaysFromStart:
+          response.data.settings?.deadline.daysFromStart || 5,
+        deadlineDaysFromEnd: response.data.settings?.deadline.daysFromEnd || 5
+      })
+    })
+  }, [])
+
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aqui você implementaria a lógica para salvar as alterações
-    console.log('Dados da empresa:', formData);
-  };
+    e.preventDefault()
+    updateCompany({
+      name: formData.name,
+      cnpj: formData.cnpj,
+      email: formData.email,
+      settings: {
+        emailNotifications: formData.emailNotifications,
+        deadline: {
+          strategy: formData.deadlineStrategy,
+          day: formData.deadlineDay,
+          daysFromStart: formData.deadlineDaysFromStart,
+          daysFromEnd: formData.deadlineDaysFromEnd
+        }
+      }
+    }).then(() => {
+      toast.success('Empresa atualizada com sucesso')
+    }).catch((error) => {
+      toast.error('Erro ao atualizar empresa', (error as Error).message)
+    })
+  }
 
   const formatDateForDisplay = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-  };
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR')
+  }
 
   // Função para calcular a data limite baseada na estratégia selecionada
-  const calculateDeadlineDate = (strategy: string, month: number, year: number) => {
-    const currentDate = new Date();
-    const targetMonth = month || currentDate.getMonth();
-    const targetYear = year || currentDate.getFullYear();
-    
+  const calculateDeadlineDate = (
+    strategy: string,
+    month: number,
+    year: number
+  ) => {
+    const currentDate = new Date()
+    const targetMonth = month || currentDate.getMonth()
+    const targetYear = year || currentDate.getFullYear()
+
     switch (strategy) {
       case 'fixed_day':
-        return new Date(targetYear, targetMonth, formData.deadlineDay);
-      
+        return new Date(targetYear, targetMonth, formData.deadlineDay)
+
       case 'start_month':
-        return getNthWorkingDay(targetYear, targetMonth, formData.deadlineDaysFromStart, 'start');
-      
+        return getNthWorkingDay(
+          targetYear,
+          targetMonth,
+          formData.deadlineDaysFromStart,
+          'start'
+        )
+
       case 'end_month':
-        return getNthWorkingDay(targetYear, targetMonth, formData.deadlineDaysFromEnd, 'end');
-      
+        return getNthWorkingDay(
+          targetYear,
+          targetMonth,
+          formData.deadlineDaysFromEnd,
+          'end'
+        )
+
       default:
-        return new Date(targetYear, targetMonth, 15);
+        return new Date(targetYear, targetMonth, 15)
     }
-  };
+  }
 
   // Função para obter o N-ésimo dia útil do início ou fim do mês
-  const getNthWorkingDay = (year: number, month: number, days: number, direction: 'start' | 'end') => {
-    let currentDate: Date;
-    let workingDays = 0;
-    
+  const getNthWorkingDay = (
+    year: number,
+    month: number,
+    days: number,
+    direction: 'start' | 'end'
+  ) => {
+    let currentDate: Date
+    let workingDays = 0
+
     if (direction === 'start') {
-      currentDate = new Date(year, month, 1);
+      currentDate = new Date(year, month, 1)
       while (workingDays < days) {
         if (isWorkingDay(currentDate)) {
-          workingDays++;
+          workingDays++
         }
         if (workingDays < days) {
-          currentDate.setDate(currentDate.getDate() + 1);
+          currentDate.setDate(currentDate.getDate() + 1)
         }
       }
     } else {
-      currentDate = new Date(year, month + 1, 0); // Último dia do mês
+      currentDate = new Date(year, month + 1, 0) // Último dia do mês
       while (workingDays < days) {
         if (isWorkingDay(currentDate)) {
-          workingDays++;
+          workingDays++
         }
         if (workingDays < days) {
-          currentDate.setDate(currentDate.getDate() - 1);
+          currentDate.setDate(currentDate.getDate() - 1)
         }
       }
     }
-    
-    return currentDate;
-  };
+
+    return currentDate
+  }
 
   // Função para verificar se um dia é útil (não é fim de semana)
   const isWorkingDay = (date: Date) => {
-    const day = date.getDay();
-    return day !== 0 && day !== 6; // 0 = Domingo, 6 = Sábado
-  };
+    const day = date.getDay()
+    return day !== 0 && day !== 6 // 0 = Domingo, 6 = Sábado
+  }
 
   // Função para obter a data limite do próximo mês para preview
   const getNextMonthDeadline = () => {
-    const currentDate = new Date();
-    const nextMonth = currentDate.getMonth() + 1;
-    const nextYear = nextMonth > 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear();
-    const adjustedMonth = nextMonth > 11 ? 0 : nextMonth;
-    
-    return calculateDeadlineDate(formData.deadlineStrategy, adjustedMonth, nextYear);
-  };
+    const currentDate = new Date()
+    const nextMonth = currentDate.getMonth() + 1
+    const nextYear =
+      nextMonth > 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()
+    const adjustedMonth = nextMonth > 11 ? 0 : nextMonth
+
+    return calculateDeadlineDate(
+      formData.deadlineStrategy,
+      adjustedMonth,
+      nextYear
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -144,7 +201,7 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
           <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
             Configurações de Notas Fiscais
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -161,21 +218,25 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                 E-mail que receberá as notas fiscais dos colaboradores
               </p>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Enviar Notas Fiscais por E-mail
+                Receber Notas Fiscais no E-mail
               </label>
               <select
-                value={formData.emailNotifications || 'enabled'}
-                onChange={(e) => handleInputChange('emailNotifications', e.target.value)}
+                value={formData.emailNotifications ? 'enabled' : 'disabled'}
+                onChange={(e) =>
+                  handleInputChange('emailNotifications', e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="enabled">Ativado</option>
                 <option value="disabled">Desativado</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                Envia as notas fiscais automaticamente para o e-mail configurado após o termino do prazo             </p>
+                Enviaremos todas as notas fiscais aprovadas automaticamente para o e-mail configurado
+                após o termino do prazo
+              </p>
             </div>
           </div>
 
@@ -183,7 +244,7 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Estratégia de Data Limite para Notas Fiscais
             </label>
-            
+
             {/* Seleção da Estratégia */}
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
@@ -193,14 +254,19 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                   name="deadlineStrategy"
                   value="fixed_day"
                   checked={formData.deadlineStrategy === 'fixed_day'}
-                  onChange={(e) => handleInputChange('deadlineStrategy', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('deadlineStrategy', e.target.value)
+                  }
                   className="text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="fixed_day" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="fixed_day"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Dia fixo do mês
                 </label>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <input
                   type="radio"
@@ -208,14 +274,19 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                   name="deadlineStrategy"
                   value="start_month"
                   checked={formData.deadlineStrategy === 'start_month'}
-                  onChange={(e) => handleInputChange('deadlineStrategy', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('deadlineStrategy', e.target.value)
+                  }
                   className="text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="start_month" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="start_month"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Dias úteis do início do mês
                 </label>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <input
                   type="radio"
@@ -223,10 +294,15 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                   name="deadlineStrategy"
                   value="end_month"
                   checked={formData.deadlineStrategy === 'end_month'}
-                  onChange={(e) => handleInputChange('deadlineStrategy', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('deadlineStrategy', e.target.value)
+                  }
                   className="text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="end_month" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="end_month"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Dias úteis do fim do mês
                 </label>
               </div>
@@ -245,11 +321,17 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                     min="1"
                     max="31"
                     value={formData.deadlineDay}
-                    onChange={(e) => handleInputChange('deadlineDay', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('deadlineDay', e.target.value)
+                    }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Ex: 15 = todo dia 15 de cada mês
+                    Ex: 15 = todo dia 15 de cada mês.
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Obs: Caso o mês não possua o dia selecionado, será
+                    considerado o último dia útil do mês.
                   </p>
                 </div>
               )}
@@ -265,11 +347,16 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                     min="1"
                     max="31"
                     value={formData.deadlineDaysFromStart}
-                    onChange={(e) => handleInputChange('deadlineDaysFromStart', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'deadlineDaysFromStart',
+                        Number(e.target.value)
+                      )
+                    }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Ex: 5 = 5º dia útil do mês (ignorando fins de semana)
+                    Ex: 5 = 5º dia útil do mês
                   </p>
                 </div>
               )}
@@ -285,7 +372,9 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
                     min="1"
                     max="31"
                     value={formData.deadlineDaysFromEnd}
-                    onChange={(e) => handleInputChange('deadlineDaysFromEnd', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('deadlineDaysFromEnd', e.target.value)
+                    }
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -302,16 +391,25 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
               </h4>
               <div className="space-y-2 text-sm text-blue-800">
                 <p>
-                  <strong>Próximo mês:</strong> {formatDateForDisplay(getNextMonthDeadline().toISOString())}
+                  <strong>Próximo mês:</strong>{' '}
+                  {formatDateForDisplay(getNextMonthDeadline().toISOString())}
                 </p>
                 <p>
-                  <strong>Mês atual:</strong> {formatDateForDisplay(calculateDeadlineDate(formData.deadlineStrategy, new Date().getMonth(), new Date().getFullYear()).toISOString())}
+                  <strong>Mês atual:</strong>{' '}
+                  {formatDateForDisplay(
+                    calculateDeadlineDate(
+                      formData.deadlineStrategy,
+                      new Date().getMonth(),
+                      new Date().getFullYear()
+                    ).toISOString()
+                  )}
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-gray-500">
-              A data limite será calculada automaticamente baseada na estratégia selecionada
+              A data limite será calculada automaticamente a cada mês baseada na
+              estratégia selecionada
             </p>
           </div>
         </div>
@@ -321,5 +419,5 @@ export const MyCompany = ({ name, cnpj, email, invoiceDeadline }: Props) => {
         <Button type="submit">Salvar Alterações</Button>
       </div>
     </form>
-  );
+  )
 }

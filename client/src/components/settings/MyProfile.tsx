@@ -1,25 +1,27 @@
 import { useUser } from 'contexts/UserContext'
 import { Button } from '../ui/Button'
 import { userService, userUtils, useUserService } from 'services/userService'
-import { UserRole } from 'types/user'
+import { User, UserRole } from 'types/user'
 import { useToastHelpers } from 'components/ui/Toast'
 import { useState } from 'react'
 
 export const MyProfile = () => {
   const { user, setUser } = useUser()
   const { name, email, role, phone } = user || {}
-  const [nameInput, setNameInput] = useState(name)
-  const [phoneInput, setPhoneInput] = useState(phone)
+  const [formData, setFormData] = useState({
+    name: name,
+    phone: phone
+  })
   const { updateUser } = useUserService()
   const toast = useToastHelpers()
 
   const handleUpdateUser = async () => {
     try {
-      const response = await updateUser(user?._id || '', {
-        name: nameInput,
-        phone: phoneInput
+      await updateUser(user?._id || '', {
+        name: formData.name,
+        phone: formData.phone
       })
-      setUser(response.data)
+      setUser({ ...user, name: formData.name, phone: formData.phone } as User)
       toast.success('Usuário atualizado com sucesso')
     } catch (error) {
       toast.error('Erro ao atualizar usuário', (error as Error).message)
@@ -35,8 +37,8 @@ export const MyProfile = () => {
           </label>
           <input
             type="text"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -46,8 +48,8 @@ export const MyProfile = () => {
           </label>
           <input
             type="tel"
-            value={phoneInput}
-            onChange={(e) => setPhoneInput(e.target.value)}
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -76,9 +78,7 @@ export const MyProfile = () => {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => handleUpdateUser()}>
-          Salvar Alterações
-        </Button>
+        <Button onClick={() => handleUpdateUser()}>Salvar Alterações</Button>
       </div>
     </div>
   )

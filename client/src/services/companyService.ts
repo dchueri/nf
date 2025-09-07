@@ -9,7 +9,17 @@ export interface CreateCompanyData {
   state: string
   zipCode: string
   phone: string
-  website?: string
+  email: string
+  settings: {
+    emailNotifications: boolean
+    deadline: {
+      strategy: 'fixed_day' | 'start_month' | 'end_month'
+      day: number
+      daysFromStart: number
+      daysFromEnd: number
+    }
+  }
+  status: 'active' | 'inactive' | 'suspended'
 }
 
 export interface Company {
@@ -17,13 +27,11 @@ export interface Company {
   name: string
   cnpj: string
   address: string
+  email: string
   city: string
   state: string
   zipCode: string
   phone: string
-  website?: string
-  ownerId: string
-  collaborators: string[]
   settings: {
     reminderSchedule: {
       firstReminder: number
@@ -31,10 +39,14 @@ export interface Company {
       finalReminder: number
       escalationReminder: number
     }
-    invoiceDeadline: number
     autoReminders: boolean
     emailNotifications: boolean
-    whatsappNotifications: boolean
+    deadline: {
+      strategy: 'fixed_day' | 'start_month' | 'end_month'
+      day: number
+      daysFromStart: number
+      daysFromEnd: number
+    }
   }
   status: 'active' | 'inactive' | 'suspended'
   createdAt: string
@@ -48,7 +60,6 @@ export interface CompanyResponse {
 
 // Service principal de empresas
 export const companyService = {
-  // Criar nova empresa
   async createCompany(
     companyData: CreateCompanyData
   ): Promise<CompanyResponse> {
@@ -59,17 +70,8 @@ export const companyService = {
     return response
   },
 
-  // Buscar empresa por ID
-  async getCompanyById(companyId: string): Promise<CompanyResponse> {
-    const response = await request<Company>(`/companies/${companyId}`, {
-      method: 'GET'
-    })
-    return response
-  },
-
-  // Buscar empresa do usuário logado
   async getMyCompany(): Promise<CompanyResponse> {
-    const response = await request<Company>('/companies/my-company', {
+    const response = await request<Company>('/companies/my', {
       method: 'GET'
     })
     return response
@@ -77,10 +79,9 @@ export const companyService = {
 
   // Atualizar empresa
   async updateCompany(
-    companyId: string,
     updateData: Partial<CreateCompanyData>
   ): Promise<CompanyResponse> {
-    const response = await request<Company>(`/companies/${companyId}`, {
+    const response = await request<Company>(`/companies`, {
       method: 'PATCH',
       data: updateData
     })
@@ -125,13 +126,15 @@ export const companyService = {
     page: number = 1,
     limit: number = 10,
     search?: string
-  ): Promise<Response<{
-    docs: Company[]
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }>> {
+  ): Promise<
+    Response<{
+      docs: Company[]
+      total: number
+      page: number
+      limit: number
+      totalPages: number
+    }>
+  > {
     const params = new URLSearchParams()
     params.append('page', page.toString())
     params.append('limit', limit.toString())

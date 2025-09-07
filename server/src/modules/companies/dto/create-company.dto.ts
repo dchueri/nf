@@ -1,6 +1,6 @@
-import { IsString, IsOptional, IsEnum, IsNumber, IsBoolean, IsArray, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { TeamPrivacy, TeamRole } from '../schemas/team.schema';
+import { CompanySettings } from '../schemas/company.schema';
 
 export class CreateCompanyDto {
   @ApiProperty({ description: 'Nome da equipe' })
@@ -37,21 +37,6 @@ export class CreateCompanyDto {
 
   @ApiProperty({ description: 'Configurações da empresa' })
   @IsOptional()
-  settings?: {
-    reminderSchedule: {
-      firstReminder: number;
-      secondReminder: number;
-      finalReminder: number;
-      escalationReminder: number;
-    };
-    invoiceDeadline: number;
-    autoReminders: boolean;
-    emailNotifications: boolean;
-    deadline: {
-      strategy: 'fixed_day' | 'start_month' | 'end_month';
-      day: number;
-      daysFromStart: number;
-      daysFromEnd: number;
-    };
-  };
+  @IsObject()
+  settings?: CompanySettings;
 }

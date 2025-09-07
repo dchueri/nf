@@ -26,6 +26,7 @@ export interface AuthResponse {
     role: UserRole
     companyId?: string
     status: string
+    phone?: string
   }
   access_token: string
 }
@@ -42,6 +43,7 @@ export interface UserProfile {
   name: string
   role: UserRole
   companyId?: string
+  phone?: string
   status: string
 }
 
@@ -258,6 +260,7 @@ export const authUtils = {
       name: authUser.name,
       email: authUser.email,
       role: authUser.role,
+      phone: authUser.phone,
       status: authUser.status as UserStatus,
       companyId: authUser.companyId || '',
       monthsWithInvoices: [],

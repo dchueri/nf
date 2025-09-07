@@ -1,31 +1,24 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
-  CogIcon,
   UserIcon,
   BuildingOfficeIcon,
-  BellIcon,
-  ShieldCheckIcon,
-  KeyIcon,
-  GlobeAltIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
-import { MyProfile } from 'components/settings/MyProfile';
-import { MyCompany } from 'components/settings/MyCompany';
-import { Security } from 'components/settings/Security';
-import { useAuth } from 'hooks/useAuth';
-import { useUser } from 'contexts/UserContext';
+  ShieldCheckIcon
+} from '@heroicons/react/24/outline'
+import { MyProfile } from 'components/settings/MyProfile'
+import { MyCompany } from 'components/settings/MyCompany'
+import { Security } from 'components/settings/Security'
 
 interface SettingsSection {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  content: React.ReactNode;
+  id: string
+  title: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+  content: React.ReactNode
 }
 
 export const Settings: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState('profile')
 
   const settingsSections: SettingsSection[] = [
     {
@@ -33,14 +26,14 @@ export const Settings: React.FC = () => {
       title: 'Meu Perfil',
       description: 'Gerencie suas informações pessoais e preferências',
       icon: UserIcon,
-      content: <MyProfile />,
+      content: <MyProfile />
     },
     {
       id: 'company',
       title: 'Minha Empresa',
       description: 'Gerencie as configurações da sua empresa',
       icon: BuildingOfficeIcon,
-      content: <MyCompany name="Tech Solutions Ltda" cnpj="12.345.678/0001-90" email="techsolutions@example.com" invoiceDeadline="2024-01-31" />,
+      content: <MyCompany />
     },
     // {
     //   id: 'notifications',
@@ -60,8 +53,6 @@ export const Settings: React.FC = () => {
     //             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
     //           </label>
     //         </div>
-
-
 
     //         <div className="flex items-center justify-between">
     //           <div>
@@ -86,8 +77,8 @@ export const Settings: React.FC = () => {
       title: 'Segurança',
       description: 'Gerencie suas configurações de segurança',
       icon: ShieldCheckIcon,
-      content: <Security />,
-    },
+      content: <Security />
+    }
     // {
     //   id: 'integrations',
     //   title: 'Integrações',
@@ -150,16 +141,20 @@ export const Settings: React.FC = () => {
     //     </div>
     //   ),
     // },
-  ];
+  ]
 
-  const activeContent = settingsSections.find(section => section.id === activeSection);
+  const activeContent = settingsSections.find(
+    (section) => section.id === activeSection
+  )
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-gray-600">Gerencie suas preferências e configurações da conta</p>
+        <p className="text-gray-600">
+          Gerencie suas preferências e configurações da conta
+        </p>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200">
@@ -194,7 +189,9 @@ export const Settings: React.FC = () => {
                 transition={{ duration: 0.2 }}
               >
                 <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">{activeContent.title}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {activeContent.title}
+                  </h2>
                   <p className="text-gray-600">{activeContent.description}</p>
                 </div>
                 {activeContent.content}
@@ -204,5 +201,5 @@ export const Settings: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
