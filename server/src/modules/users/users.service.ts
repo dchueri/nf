@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import { InjectModel } from '@nestjs/mongoose';
@@ -155,6 +154,7 @@ export class UsersService {
       const existingUser = await this.userModel
         .findOne({
           email: updateUserDto.email,
+          status: { $ne: UserStatus.INACTIVE },
           _id: { $ne: id },
         })
         .exec();
@@ -172,6 +172,7 @@ export class UsersService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
+    updatedUser.password = undefined;
     return updatedUser;
   }
 

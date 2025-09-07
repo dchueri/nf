@@ -1,28 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  UserPlusIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  EllipsisVerticalIcon,
-  UserCircleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  DocumentArrowDownIcon,
-  TrashIcon,
-  PencilIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { Button } from '../ui/Button'
-import { User, UserRole, UserStatus } from '../../types/user'
-import {
-  TeamRole,
-  TeamMemberStatus,
-  UserSearchFilters,
-  BulkUserOperation
-} from '../../types/team'
+import { User } from '../../types/user'
+import { UserSearchFilters, BulkUserOperation } from '../../types/team'
 import * as teamService from '../../services/teamService'
 import { cn } from '../../utils/cn'
 import { userService } from 'services/userService'

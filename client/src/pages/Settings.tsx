@@ -10,10 +10,11 @@ import {
   GlobeAltIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '../components/ui/Button';
 import { MyProfile } from 'components/settings/MyProfile';
 import { MyCompany } from 'components/settings/MyCompany';
 import { Security } from 'components/settings/Security';
+import { useAuth } from 'hooks/useAuth';
+import { useUser } from 'contexts/UserContext';
 
 interface SettingsSection {
   id: string;
@@ -32,7 +33,7 @@ export const Settings: React.FC = () => {
       title: 'Meu Perfil',
       description: 'Gerencie suas informações pessoais e preferências',
       icon: UserIcon,
-      content: <MyProfile name="John Doe" email="john.doe@example.com" role="Software Engineer" phone="123-456-7890" />,
+      content: <MyProfile />,
     },
     {
       id: 'company',

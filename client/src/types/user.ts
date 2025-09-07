@@ -26,6 +26,7 @@ export interface User {
     amount?: number
   }[]
   companyId: string
+  phone?: string
   avatar?: string
   position?: string
   department?: string

@@ -20,7 +20,7 @@ export interface RegisterData {
 
 export interface AuthResponse {
   user: {
-    id: string
+    sub: string
     email: string
     name: string
     role: UserRole
@@ -37,7 +37,7 @@ export interface RefreshTokenResponse {
 }
 
 export interface UserProfile {
-  id: string
+  sub: string
   email: string
   name: string
   role: UserRole
@@ -254,7 +254,7 @@ export const authUtils = {
   // Formatar dados do usuário para o contexto
   formatUserForContext: (authUser: AuthResponse['user']): User => {
     return {
-      _id: authUser.id,
+      _id: authUser.sub,
       name: authUser.name,
       email: authUser.email,
       role: authUser.role,

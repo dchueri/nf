@@ -23,6 +23,7 @@ export interface UpdateUserData {
   email?: string
   role?: UserRole
   position?: string
+  phone?: string
   department?: string
   avatar?: string
   status?: 'active' | 'inactive' | 'suspended'
