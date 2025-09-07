@@ -10,7 +10,13 @@ import {
   Request,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExtraModels } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiExtraModels,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -23,6 +29,7 @@ import { UserRole, UserStatus } from './schemas/user.schema';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { InviteUserDto } from './dto/invite-user.dto';
+import { BulkUpdateUserDto } from './dto/bulk-update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -39,10 +46,13 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 409, description: 'Email já existe' })
   create(@Body() createUserDto: CreateUserDto, @Request() req) {
-    if (createUserDto.role === UserRole.COLLABORATOR && !createUserDto.companyId) {
+    if (
+      createUserDto.role === UserRole.COLLABORATOR &&
+      !createUserDto.companyId
+    ) {
       createUserDto.companyId = req.user.companyId;
     }
-    
+
     return this.usersService.create(createUserDto);
   }
 
@@ -50,17 +60,42 @@ export class UsersController {
   @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Listar todos os usuários da empresa' })
   @ApiResponse({ status: 200, description: 'Lista de usuários' })
-  findAll(@Request() req, @Query('page') page: number, @Query('limit') limit: number, @Query('search') search: string, @Query('status') status: UserStatus, @Query('role') role: UserRole) {
-    return this.usersService.findByCompanyPaginated(req.user.companyId, page, limit, search, status, role);
+  findAll(
+    @Request() req,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('status') status: UserStatus,
+    @Query('role') role: UserRole,
+    @Query('selectedMonth') selectedMonth: string,
+    @Query('toDashboard') toDashboard: boolean,
+  ) {
+    const authorId = req.user.sub;
+    return this.usersService.findByCompanyPaginated(
+      req.user.companyId,
+      page,
+      limit,
+      search,
+      status,
+      role,
+      selectedMonth,
+      toDashboard,
+      authorId,
+    );
   }
 
   @Get('stats/:referenceMonth')
   @Roles(UserRole.MANAGER)
-  @ApiOperation({ summary: 'Obter estatísticas dos usuários por mês de referência' })
+  @ApiOperation({
+    summary: 'Obter estatísticas dos usuários por mês de referência',
+  })
   @ApiResponse({ status: 200, description: 'Estatísticas dos usuários' })
   @ResponseMessage('Estatísticas dos usuários obtidas com sucesso')
   getStats(@Request() req, @Param('referenceMonth') referenceMonth: string) {
-    return this.usersService.getUsersStatsByMonth(req.user.companyId, referenceMonth);
+    return this.usersService.getUsersStatsByMonth(
+      req.user.companyId,
+      referenceMonth,
+    );
   }
 
   @Get('profile')
@@ -104,14 +139,8 @@ export class UsersController {
   @ApiOperation({ summary: 'Convidar colaborador' })
   @ApiResponse({ status: 201, description: 'Convite enviado' })
   @ApiResponse({ status: 409, description: 'Email já existe' })
-  inviteCollaborator(
-    @Body() body: InviteUserDto,
-    @Request() req
-  ) {
-    return this.usersService.inviteCollaborator(
-      body.email,
-      req.user.companyId
-    );
+  inviteCollaborator(@Body() body: InviteUserDto, @Request() req) {
+    return this.usersService.inviteCollaborator(body.email, req.user.companyId);
   }
 
   @Delete('invite/:userId')
@@ -122,14 +151,19 @@ export class UsersController {
     return this.usersService.cancelInvitation(userId, req.user.companyId);
   }
 
+  @Patch('bulk/status')
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Atualizar status dos usuários' })
+  @ApiResponse({ status: 200, description: 'Status atualizado' })
+  bulkUpdateStatus(@Body() body: BulkUpdateUserDto) {
+    return this.usersService.bulkUpdateStatus(body.userIds, body.status);
+  }
+
   @Patch(':id/status')
   @Roles(UserRole.MANAGER)
   @ApiOperation({ summary: 'Atualizar status do usuário' })
   @ApiResponse({ status: 200, description: 'Status atualizado' })
-  updateStatus(
-    @Param('id') id: string,
-    @Body() body: { status: string }
-  ) {
+  updateStatus(@Param('id') id: string, @Body() body: { status: string }) {
     return this.usersService.updateStatus(id, body.status);
   }
 }

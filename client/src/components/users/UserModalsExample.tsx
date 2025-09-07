@@ -103,6 +103,9 @@ export const UserModalsExample: React.FC = () => {
         isOpen={isEditModalOpen}
         setSelectedUser={setSelectedUser}
         user={selectedUser}
+        onUpdateUser={() => {
+          console.log('User updated')
+        }}
       />
 
       <InviteUserModal

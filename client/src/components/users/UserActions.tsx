@@ -1,21 +1,33 @@
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Button } from '../ui/Button'
 import { BulkUserOperation } from 'types/team'
+import { User, UserStatus } from 'types/user'
 export const UserActions = ({
   searchQuery,
   setSearchQuery,
   selectedUsers,
   handleBulkOperation,
   handleSelectAll,
-  usersNumber
+  users
 }: {
   searchQuery: string
   setSearchQuery: (searchQuery: string) => void
   selectedUsers: Set<string>
   handleBulkOperation: (operation: BulkUserOperation['operation']) => void
   handleSelectAll: () => void
-  usersNumber: number
+  users: User[]
 }) => {
+  const usersNumber = users.length
+
+  let canSuspendAllSelectedUsers = true
+  selectedUsers.forEach((userId) => {
+    if (
+      users.find((user) => user._id === userId)?.status !== UserStatus.ACTIVE
+    ) {
+      canSuspendAllSelectedUsers = false
+    }
+  })
+
   return (
     <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between">
@@ -37,13 +49,15 @@ export const UserActions = ({
                 {selectedUsers.size} selecionado
                 {selectedUsers.size !== 1 ? 's' : ''}
               </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleBulkOperation('suspend')}
-              >
-                Suspender
-              </Button>
+              {canSuspendAllSelectedUsers && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleBulkOperation('suspend')}
+                >
+                  Suspender
+                </Button>
+              )}
               <Button
                 variant="danger"
                 size="sm"

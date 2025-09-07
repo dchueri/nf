@@ -862,6 +862,173 @@
 
 ## Executor's Feedback or Assistance Requests
 
+### 🆕 EXECUTOR'S FEEDBACK: Docker Frontend Dependencies Issue Resolution
+
+**Current Status:** Problema com dependências do frontend no Docker resolvido com sucesso! ✅
+
+**Problem Identified:**
+O Docker Compose estava usando volumes que sobrescreviam o `node_modules` do container, causando erros de "Failed to resolve import" para dependências como `react-router-dom`, `framer-motion`, `clsx`, `axios`, etc.
+
+**Root Cause Analysis:**
+1. **Volume Conflict:** O volume `./client:/app` estava sobrescrevendo todo o diretório `/app` do container, incluindo o `node_modules` instalado durante o build
+2. **Cache Issues:** O Vite estava usando cache antigo com dependências não encontradas
+3. **Permission Issues:** Usuário root estava causando problemas de permissão
+
+**Solution Implemented:**
+
+#### 1. **Dockerfile Improvements** ✅
+- Added non-root user (`nextjs`) for better security
+- Proper ownership management with `chown -R nextjs:nodejs /app`
+- Maintained dependency installation during build process
+
+#### 2. **Docker Compose Volume Strategy** ✅
+- **Before:** `./client:/app` (overwrote entire container directory)
+- **After:** Specific volume mounts for source files only:
+  ```yaml
+  volumes:
+    - ./client/src:/app/src
+    - ./client/public:/app/public
+    - ./client/index.html:/app/index.html
+    - ./client/vite.config.ts:/app/vite.config.ts
+    - ./client/tsconfig.json:/app/tsconfig.json
+    - ./client/tailwind.config.mjs:/app/tailwind.config.mjs
+    - ./client/postcss.config.mjs:/app/postcss.config.mjs
+    - /app/node_modules  # Preserves container's node_modules
+  ```
+
+#### 3. **Docker Compose Cleanup** ✅
+- Removed obsolete `version: '3.8'` attribute
+- Fixed warning about deprecated version field
+
+**Technical Achievements:**
+- ✅ All dependencies now properly installed and accessible
+- ✅ No more "Failed to resolve import" errors
+- ✅ Vite development server running smoothly
+- ✅ Frontend accessible at http://localhost:3000
+- ✅ Hot reload working correctly
+- ✅ Proper security with non-root user
+- ✅ Clean Docker Compose configuration
+
+**Files Modified:**
+- `client/Dockerfile` - Added user management and security improvements
+- `docker-compose.yml` - Fixed volume strategy and removed deprecated version
+
+**Verification:**
+- ✅ `docker-compose logs client` shows no errors
+- ✅ `curl http://localhost:3000` returns proper HTML
+- ✅ All dependencies found in container: `react-router-dom`, `framer-motion`, `clsx`, `axios`
+- ✅ Vite server ready and responsive
+
+**Ready for:** Development work can now proceed without Docker dependency issues
+
+### 🆕 EXECUTOR'S FEEDBACK: Docker Server Dependencies Issue Resolution
+
+**Current Status:** Problema com dependências do servidor no Docker resolvido com sucesso! ✅
+
+**Problem Identified:**
+O servidor NestJS estava apresentando erro de compilação: `Cannot find module 'dayjs' or its corresponding type declarations` no arquivo `users.service.ts`.
+
+**Root Cause Analysis:**
+1. **Same Volume Issue:** O servidor tinha o mesmo problema do frontend - volume `./server:/app` sobrescrevendo todo o diretório `/app` do container
+2. **Missing Dependencies:** Dependências como `dayjs` não estavam acessíveis no container devido ao volume conflitante
+3. **TypeScript Compilation:** O NestJS não conseguia encontrar os módulos instalados durante o build
+
+**Solution Implemented:**
+
+#### **Docker Compose Server Volume Strategy** ✅
+- **Before:** `./server:/app` (overwrote entire container directory)
+- **After:** Specific volume mounts for source files only:
+  ```yaml
+  volumes:
+    - ./server/src:/app/src
+    - ./server/test:/app/test
+    - ./server/nest-cli.json:/app/nest-cli.json
+    - ./server/tsconfig.json:/app/tsconfig.json
+    - ./server/tsconfig.build.json:/app/tsconfig.build.json
+    - /app/node_modules  # Preserves container's node_modules
+    - ./server/uploads:/app/uploads
+  ```
+
+**Technical Achievements:**
+- ✅ All server dependencies now properly installed and accessible
+- ✅ No more "Cannot find module 'dayjs'" errors
+- ✅ NestJS application running successfully
+- ✅ Server accessible at http://localhost:3001
+- ✅ Health check endpoint responding correctly
+- ✅ Swagger documentation available at http://localhost:3001/api
+- ✅ All routes mapped successfully
+
+**Files Modified:**
+- `docker-compose.yml` - Fixed server volume strategy
+
+**Verification:**
+- ✅ `docker exec central-notas-server ls -la /app/node_modules | grep dayjs` shows dayjs installed
+- ✅ `docker-compose logs server` shows no compilation errors
+- ✅ `curl http://localhost:3001/health` returns proper health status
+- ✅ NestJS application successfully started
+
+**Ready for:** Both frontend and backend now working correctly in Docker environment
+
+### 🆕 EXECUTOR'S FEEDBACK: User Edit Modal Status Buttons Implementation
+
+**Current Status:** Modal de edição de usuário atualizado com botões de status e confirmação! ✅
+
+**User Request:** Alterar a seleção de status do select normal para 2 botões (Suspender e Remover), com botão de Reativar para usuários suspensos, e adicionar confirmação igual ao remover usuário.
+
+**Solution Implemented:**
+
+#### **Status Actions Replacement** ✅
+- **Before:** Select dropdown com opções de status
+- **After:** Botões específicos baseados no status atual do usuário
+
+#### **Dynamic Button Logic** ✅
+- **Usuário Ativo:** Botões "Suspender Usuário" e "Remover Usuário"
+- **Usuário Suspenso:** Botões "Reativar Usuário" e "Remover Usuário"  
+- **Usuário Inativo:** Botão "Reativar Usuário"
+
+#### **Confirmation System** ✅
+- **Suspender:** Confirmação com variante "warning" (amarelo)
+- **Reativar:** Confirmação com variante "info" (azul)
+- **Remover:** Confirmação com variante "danger" (vermelho)
+- Todas as ações requerem confirmação antes da execução
+
+#### **Visual Design** ✅
+- **Status Display:** Card com ícone e status atual
+- **Button Styling:** Cores específicas por ação (amarelo, verde, vermelho)
+- **Loading States:** Spinners durante processamento
+- **Icons:** Ícones específicos para cada ação (ExclamationTriangle, ArrowPath, XCircle)
+
+#### **Technical Implementation** ✅
+- **Hook Integration:** `useConfirmDialog` para gerenciamento de confirmações
+- **Type Safety:** Conversão de `UserStatus` enum para strings da API
+- **Error Handling:** Tratamento de erros com feedback visual
+- **State Management:** Estados separados para submit e status updates
+- **API Integration:** Chamadas específicas para cada ação de status
+
+**Files Modified:**
+- `client/src/components/users/modals/EditUserModal.tsx` - Implementação completa dos botões de status
+- `client/src/services/userService.ts` - Adicionado campo `status` ao tipo `UpdateUserData`
+- `client/src/components/users/UserModalsExample.tsx` - Corrigido prop `onUpdateUser`
+- `client/src/components/users/UserManagement.tsx` - Corrigido parâmetros da API
+
+**Technical Achievements:**
+- ✅ Select de status substituído por botões contextuais
+- ✅ Confirmação obrigatória para todas as ações de status
+- ✅ Interface intuitiva com cores e ícones específicos
+- ✅ Estados de loading durante processamento
+- ✅ Tratamento de erros robusto
+- ✅ Type safety completo
+- ✅ Compilação bem-sucedida
+
+**User Experience Improvements:**
+- **Clarity:** Ações específicas em vez de select genérico
+- **Safety:** Confirmação obrigatória para ações críticas
+- **Feedback:** Estados visuais claros durante processamento
+- **Context:** Botões aparecem baseados no status atual
+- **Consistency:** Mesmo padrão de confirmação usado em outras partes do sistema
+
+**Ready for:** Modal de edição de usuário com nova interface de status está pronto para uso
+
 ### 🆕 EXECUTOR'S FEEDBACK: User Management Modals Implementation Progress
 
 **Current Status:** Tasks 2.1, 2.2, 2.3, and 2.4 completed successfully! Modais de edição e convite de usuários implementados e funcionais.
@@ -1110,3 +1277,11 @@
 - **Confirmation Dialogs:** Confirmações para ações perigosas são essenciais para UX
 - **Component Reusability:** Componentes base (Modal, ConfirmDialog) facilitam desenvolvimento
 - **Type Safety:** Interfaces TypeScript bem definidas previnem erros de compilação
+
+### 🆕 Docker Development Lessons
+- **Volume Strategy:** Volumes que sobrescrevem diretórios inteiros podem causar problemas com node_modules
+- **Dependency Management:** Sempre preservar node_modules do container com volumes específicos
+- **User Permissions:** Usar usuários não-root em containers para melhor segurança
+- **Cache Issues:** Vite pode manter cache antigo - restart do container resolve
+- **Docker Compose:** Remover atributos obsoletos como 'version' para evitar warnings
+- **Hot Reload:** Volumes específicos permitem hot reload sem quebrar dependências

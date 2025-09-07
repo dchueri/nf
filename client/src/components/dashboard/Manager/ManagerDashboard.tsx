@@ -1,8 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import {
-  BellIcon,
-  ChartBarIcon
-} from '@heroicons/react/24/outline'
+import { BellIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 import { Button } from '../../ui/Button'
 import { useToastHelpers } from '../../ui/Toast'
 import {
@@ -13,7 +10,7 @@ import dayjs from 'dayjs'
 import { User } from 'types/user'
 import { UserStats } from './UserStats'
 import { DateSelector } from './DateSelector'
-import { UserFilters, UserFilterType } from './UserFilters'
+import { UserFilters, UserInvoiceStatusFilterType } from './UserFilters'
 import { UserTable } from './UserTable'
 import { StatsSkeleton, TableSkeleton } from '../../ui/SkeletonLoader'
 import { ButtonLoader } from '../../ui/LoadingSpinner'
@@ -27,21 +24,10 @@ interface UserListResponse {
   limit: number
   totalPages: number
 }
-interface UserStatus {
-  id: string
-  name: string
-  email: string
-  department: string
-  hasSubmitted: boolean
-  status: 'approved' | 'rejected' | 'pending' | 'not_submitted'
-  amount?: number
-  submittedAt?: string
-  referenceMonth: string // Mês de referência (YYYY-MM)
-  deadlineDate: string // Data limite para o mês
-}
 
 export const ManagerDashboard: React.FC = () => {
-  const [selectedFilter, setSelectedFilter] = useState<UserFilterType>('all')
+  const [selectedFilter, setSelectedFilter] =
+    useState<UserInvoiceStatusFilterType>('all')
   const [selectedMonth, setSelectedMonth] = useState<string>(CURRENT_MONTH)
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
@@ -69,23 +55,44 @@ export const ManagerDashboard: React.FC = () => {
   const users = usersPage.docs
 
   useEffect(() => {
+    setSelectedFilter('all')
+    getUserStats(selectedMonth)
+      .then((statsData) => {
+        setStats(statsData.data)
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar dados:', error)
+      })
+  }, [selectedMonth])
+
+  useEffect(() => {
     setDataLoading(true)
     Promise.all([
-      getUserStats(selectedMonth),
-      getUsers(pagination.page, pagination.limit, '', '', textSearch)
-    ]).then(([statsData, usersData]) => {
-      console.log('statsData', statsData)
-      console.log('usersData', usersData)
-      setStats(statsData.data)
-      setUsersPage(usersData.data)
-      setDataLoading(false)
-    }).catch((error) => {
-      console.error('Erro ao carregar dados:', error)
-      setDataLoading(false)
-    })
-  }, [selectedMonth, pagination.page, pagination.limit, textSearch])
-
-
+      getUsers(
+        pagination.page,
+        pagination.limit,
+        selectedFilter,
+        'collaborator',
+        textSearch,
+        selectedMonth,
+        true
+      )
+    ])
+      .then(([usersData]) => {
+        setUsersPage(usersData.data)
+        setDataLoading(false)
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar dados:', error)
+        setDataLoading(false)
+      })
+  }, [
+    selectedMonth,
+    pagination.page,
+    pagination.limit,
+    textSearch,
+    selectedFilter
+  ])
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const [year, month] = selectedMonth.split('-').map(Number)
@@ -111,80 +118,6 @@ export const ManagerDashboard: React.FC = () => {
     const newMonthString = `${newYear}-${String(newMonth).padStart(2, '0')}`
     setSelectedMonth(newMonthString)
   }
-
-  // Mock data
-  // const users: UserStatus[] = [
-  //   {
-  //     id: '1',
-  //     name: 'João Silva',
-  //     email: 'joao.silva@empresa.com',
-  //     department: 'TI',
-  //     hasSubmitted: true,
-  //     status: 'approved',
-  //     amount: 5000,
-  //     submittedAt: '2024-01-15',
-  //     referenceMonth: '2024-01',
-  //     deadlineDate: '2024-01-15'
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Maria Santos',
-  //     email: 'maria.santos@empresa.com',
-  //     department: 'Marketing',
-  //     hasSubmitted: false,
-  //     status: 'not_submitted',
-  //     referenceMonth: '2024-01',
-  //     deadlineDate: '2024-01-15'
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Pedro Costa',
-  //     email: 'pedro.costa@empresa.com',
-  //     department: 'Vendas',
-  //     hasSubmitted: true,
-  //     status: 'pending',
-  //     amount: 4800,
-  //     submittedAt: '2024-01-14',
-  //     referenceMonth: '2024-01',
-  //     deadlineDate: '2024-01-15'
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Ana Oliveira',
-  //     email: 'ana.oliveira@empresa.com',
-  //     department: 'RH',
-  //     hasSubmitted: true,
-  //     status: 'rejected',
-  //     amount: 5200,
-  //     submittedAt: '2024-01-13',
-  //     referenceMonth: '2024-01',
-  //     deadlineDate: '2024-01-15'
-  //   },
-  //   {
-  //     id: '5',
-  //     name: 'Carlos Lima',
-  //     email: 'carlos.lima@empresa.com',
-  //     department: 'Financeiro',
-  //     hasSubmitted: false,
-  //     status: 'not_submitted',
-  //     referenceMonth: '2024-02',
-  //     deadlineDate: '2024-02-15'
-  //   },
-  //   {
-  //     id: '6',
-  //     name: 'Fernanda Costa',
-  //     email: 'fernanda.costa@empresa.com',
-  //     department: 'Vendas',
-  //     hasSubmitted: true,
-  //     status: 'approved',
-  //     amount: 4500,
-  //     submittedAt: '2024-02-10',
-  //     referenceMonth: '2024-02',
-  //     deadlineDate: '2024-02-15'
-  //   }
-  // ]
-
-
 
   const handleSendReminders = useCallback(async () => {
     setLoading(true)
@@ -224,8 +157,6 @@ export const ManagerDashboard: React.FC = () => {
     }
   }, [toast])
 
-
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -264,13 +195,13 @@ export const ManagerDashboard: React.FC = () => {
         </div>
       </div>
 
-      <DateSelector selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} navigateMonth={navigateMonth} />
-      
-      {dataLoading ? (
-        <StatsSkeleton />
-      ) : (
-        <UserStats stats={stats} />
-      )}
+      <DateSelector
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        navigateMonth={navigateMonth}
+      />
+
+      {dataLoading ? <StatsSkeleton /> : <UserStats stats={stats} />}
 
       <UserFilters
         selectedFilter={selectedFilter}
@@ -283,7 +214,6 @@ export const ManagerDashboard: React.FC = () => {
         <UserTable
           users={users}
           selectedMonth={selectedMonth}
-          selectedFilter={selectedFilter}
           onUserAction={(userId, action) => {
             console.log('User action:', userId, action)
             // Implementar ações específicas aqui

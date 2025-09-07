@@ -52,39 +52,39 @@ export const companyService = {
   async createCompany(
     companyData: CreateCompanyData
   ): Promise<CompanyResponse> {
-    const response = await request<CompanyResponse>('/companies', {
+    const response = await request<Company>('/companies', {
       method: 'POST',
       data: companyData
     })
-    return response.data
+    return response
   },
 
   // Buscar empresa por ID
-  async getCompanyById(companyId: string): Promise<Company> {
+  async getCompanyById(companyId: string): Promise<CompanyResponse> {
     const response = await request<Company>(`/companies/${companyId}`, {
       method: 'GET'
     })
-    return response.data
+    return response
   },
 
   // Buscar empresa do usuário logado
-  async getMyCompany(): Promise<Company> {
+  async getMyCompany(): Promise<CompanyResponse> {
     const response = await request<Company>('/companies/my-company', {
       method: 'GET'
     })
-    return response.data
+    return response
   },
 
   // Atualizar empresa
   async updateCompany(
     companyId: string,
     updateData: Partial<CreateCompanyData>
-  ): Promise<Company> {
+  ): Promise<CompanyResponse> {
     const response = await request<Company>(`/companies/${companyId}`, {
       method: 'PATCH',
       data: updateData
     })
-    return response.data
+    return response
   },
 
   // Verificar se CNPJ já existe

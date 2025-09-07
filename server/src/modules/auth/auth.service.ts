@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
+import { UserStatus } from '../users/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +15,9 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
+    if (user && user.status === UserStatus.SUSPENDED) {
+      throw new UnauthorizedException('Usuário suspenso, entre em contato com o administrador');
+    }
     if (user && await bcrypt.compare(password, user.password)) {
       const { password, ...result } = user.toObject();
       return result;

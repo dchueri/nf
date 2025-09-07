@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -35,7 +33,11 @@ services:
       JWT_EXPIRES_IN: 7d
       PORT: 3001
     volumes:
-      - ./server:/app
+      - ./server/src:/app/src
+      - ./server/test:/app/test
+      - ./server/nest-cli.json:/app/nest-cli.json
+      - ./server/tsconfig.json:/app/tsconfig.json
+      - ./server/tsconfig.build.json:/app/tsconfig.build.json
       - /app/node_modules
       - ./server/uploads:/app/uploads
     depends_on:
@@ -57,7 +59,13 @@ services:
       NODE_ENV: development
       REACT_APP_API_URL: http://localhost:3001
     volumes:
-      - ./client:/app
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.ts:/app/vite.config.ts
+      - ./client/tsconfig.json:/app/tsconfig.json
+      - ./client/tailwind.config.mjs:/app/tailwind.config.mjs
+      - ./client/postcss.config.mjs:/app/postcss.config.mjs
       - /app/node_modules
     depends_on:
       - server

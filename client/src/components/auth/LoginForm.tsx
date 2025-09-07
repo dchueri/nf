@@ -73,12 +73,11 @@ export const LoginForm: React.FC = () => {
 
     try {
       await login(formData.email, formData.password, formData.rememberMe)
-      toast.success('Login realizado com sucesso!', 'Bem-vindo de volta.')
+      toast.success('Login realizado com sucesso!', 'Bom te ver de volta.')
     } catch (error) {
-      console.log('error', error)
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login'
       setErrors({ general: errorMessage })
-      toast.error('Erro no login', errorMessage)
+      toast.error('Ops!', errorMessage)
     } finally {
       setIsLoading(false)
     }

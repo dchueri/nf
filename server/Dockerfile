@@ -2,6 +2,7 @@ FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
+RUN apk add --no-cache python3 make g++
 
 # Install dependencies first (for better caching)
 COPY package.json yarn.lock ./

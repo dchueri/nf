@@ -4,8 +4,6 @@ import { useUser } from '../contexts/UserContext'
 import { User, UserRole } from '../types/user'
 import { authService, authUtils, LoginCredentials } from '../services/authService'
 
-
-
 export const useAuth = () => {
   const { setUser } = useUser()
   const navigate = useNavigate()
@@ -20,13 +18,10 @@ export const useAuth = () => {
 
     try {
       // Fazer login usando o AuthService
-      console.log('email', email)
       const response = await authService.login({ email, password, rememberMe })
       
       // Converter dados do usuário para o formato do contexto
-       console.log('response', response)
       const user = authUtils.formatUserForContext(response.data.user)
-      console.log('user', user)
       // Update user context
       setUser(user)
 
@@ -35,6 +30,7 @@ export const useAuth = () => {
     } catch (error) {
       // Handle authentication errors
       if (error instanceof Error) {
+        console.error('Login error:', error)
         throw new Error(error.message)
       } else {
         throw new Error('Erro interno do servidor')

@@ -60,7 +60,7 @@ export const UserFilters = ({
               >
                 <option value="">Todos</option>
                 <option value={UserStatus.ACTIVE}>Ativo</option>
-                <option value={UserStatus.INACTIVE}>Inativo</option>
+                <option value={UserStatus.SUSPENDED}>Suspenso</option>
                 <option value={UserStatus.PENDING}>Pendente</option>
               </select>
             </div>

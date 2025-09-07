@@ -70,7 +70,9 @@ export const authService = {
   },
 
   // Registro de novo usuário
-  async register(userData: RegisterData): Promise<{ data: AuthResponse; message: string }> {
+  async register(
+    userData: RegisterData
+  ): Promise<{ data: AuthResponse; message: string }> {
     const response = await request<AuthResponse>('/auth/register', {
       method: 'POST',
       data: userData
@@ -83,11 +85,13 @@ export const authService = {
   },
 
   // Renovar token JWT
-  async refreshToken(): Promise<{ data: RefreshTokenResponse; message: string }> {
+  async refreshToken(): Promise<{
+    data: RefreshTokenResponse
+    message: string
+  }> {
     const response = await request<RefreshTokenResponse>('/auth/refresh', {
       method: 'POST'
     })
-    console.log('response', response)
 
     // Atualizar token armazenado
     const currentToken =
@@ -226,7 +230,9 @@ export const authService = {
   },
 
   // Verificar se email está disponível
-  async checkEmailAvailability(email: string): Promise<{ data: boolean; message: string }> {
+  async checkEmailAvailability(
+    email: string
+  ): Promise<{ data: boolean; message: string }> {
     try {
       await request(`/auth/check-email/${email}`, {
         method: 'GET'

@@ -1,11 +1,11 @@
 import React from 'react'
 import { Button } from '../../ui/Button'
 
-export type UserFilterType = 'all' | 'pending' | 'approved' | 'rejected' | 'not_submitted'
+export type UserInvoiceStatusFilterType = 'all' | 'pending' | 'approved' | 'rejected' | 'not_submitted'
 
 interface UserFiltersProps {
-  selectedFilter: UserFilterType
-  onFilterChange: (filter: UserFilterType) => void
+  selectedFilter: UserInvoiceStatusFilterType
+  onFilterChange: (filter: UserInvoiceStatusFilterType) => void
   className?: string
 }
 

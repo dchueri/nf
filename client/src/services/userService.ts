@@ -25,6 +25,7 @@ export interface UpdateUserData {
   position?: string
   department?: string
   avatar?: string
+  status?: 'active' | 'inactive' | 'suspended'
 }
 
 export interface UserFilters {
@@ -61,6 +62,26 @@ export interface UserStatsDashboard {
 
 // Service principal de usuários
 export const userService = {
+  async bulkUpdateStatus(
+    userIds: string[],
+    status: 'active' | 'inactive' | 'suspended'
+  ): Promise<Response<User>> {
+    return request<User>(`/users/bulk/status`, {
+      method: 'PATCH',
+      data: { userIds, status }
+    })
+  },
+
+  async updateUser(
+    userId: string,
+    data: UpdateUserData
+  ): Promise<Response<User>> {
+    return request<User>(`/users/${userId}`, {
+      method: 'PATCH',
+      data
+    })
+  },
+
   async cancelInvitation(userId: string): Promise<Response<User>> {
     return request<User>(`/users/invite/${userId}`, {
       method: 'DELETE'
@@ -74,12 +95,22 @@ export const userService = {
     })
   },
 
-  async getUserStats(referenceMonth: string): Promise<Response<UserStatsDashboard>> {
+  async getUserStats(
+    referenceMonth: string
+  ): Promise<Response<UserStatsDashboard>> {
     return request<UserStatsDashboard>(`/users/stats/${referenceMonth}`)
   },
 
   // Buscar usuários para dashboard do gestor
-  async getUsers(page: number, limit: number, status: string, role: string, search: string): Promise<Response<UserListResponse>> {
+  async getUsers(
+    page: number,
+    limit: number,
+    status: string,
+    role: string,
+    search: string,
+    selectedMonth: string,
+    toDashboard: boolean
+  ): Promise<Response<UserListResponse>> {
     return request<UserListResponse>(`/users`, {
       method: 'GET',
       params: {
@@ -87,7 +118,9 @@ export const userService = {
         limit,
         status,
         role,
-        search
+        search,
+        toDashboard,
+        selectedMonth
       }
     })
   },
@@ -108,7 +141,10 @@ export const userService = {
   },
 
   // Ativar/desativar usuário
-  async toggleUserStatus(userId: string, active: boolean): Promise<Response<User>> {
+  async toggleUserStatus(
+    userId: string,
+    active: boolean
+  ): Promise<Response<User>> {
     return request<User>(`/users/${userId}/status`, {
       method: 'PATCH',
       data: { active }
@@ -116,7 +152,10 @@ export const userService = {
   },
 
   // Alterar papel/role do usuário
-  async changeUserRole(userId: string, newRole: UserRole): Promise<Response<User>> {
+  async changeUserRole(
+    userId: string,
+    newRole: UserRole
+  ): Promise<Response<User>> {
     return request<User>(`/users/${userId}/role`, {
       method: 'PATCH',
       data: { role: newRole }
@@ -124,7 +163,10 @@ export const userService = {
   },
 
   // Buscar usuários para autocomplete
-  async searchUsers(query: string, companyId: string): Promise<Response<User[]>> {
+  async searchUsers(
+    query: string,
+    companyId: string
+  ): Promise<Response<User[]>> {
     const params = new URLSearchParams({
       q: query,
       companyId,
@@ -186,7 +228,9 @@ export const userService = {
   async importUsers(
     companyId: string,
     file: File
-  ): Promise<Response<{ success: boolean; importedCount: number; errors: string[] }>> {
+  ): Promise<
+    Response<{ success: boolean; importedCount: number; errors: string[] }>
+  > {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('companyId', companyId)

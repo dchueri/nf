@@ -67,7 +67,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const { page, limit, total, totalPages } = pagination
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
-  
+
   // Confirmação para ações perigosas
   const confirmDialog = useConfirmDialog()
 
@@ -88,11 +88,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
     try {
       const results = await userService.getUsers(
-        1,
-        10,
+        pagination.page,
+        pagination.limit,
         filters.status?.[0] || '',
         filters.role?.[0] || '',
-        debouncedSearchQuery
+        debouncedSearchQuery,
+        '', // selectedMonth
+        false // toDashboard
       )
       setUsers(results.data.docs)
       setPagination({
@@ -136,7 +138,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     if (operation === 'remove') {
       const userCount = selectedUsers.size
       const userText = userCount === 1 ? 'usuário' : 'usuários'
-      
+
       confirmDialog.confirm(
         'Excluir Usuários',
         `Tem certeza que deseja excluir ${userCount} ${userText}? Esta ação não poderá ser desfeita.`,
@@ -167,15 +169,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
 
         // Update local state
         if (operation === 'remove') {
+          await userService.bulkUpdateStatus(
+            Array.from(selectedUsers),
+            'inactive'
+          )
           setUsers(users.filter((user) => !selectedUsers.has(user._id)))
         } else if (operation === 'suspend') {
-          setUsers(
-            users.map((user) =>
-              selectedUsers.has(user._id)
-                ? { ...user, role: UserRole.COLLABORATOR }
-                : user
-            )
+          await userService.bulkUpdateStatus(
+            Array.from(selectedUsers),
+            'suspended'
           )
+          setUsers(users.filter((user) => !selectedUsers.has(user._id)))
         }
 
         setSelectedUsers(new Set())
@@ -217,7 +221,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       setSelectedUser(users.find((user) => user._id === userId) || null)
       setIsEditUserModalOpen(true)
       return
-    } 
+    }
     if (action === 'remove') {
       // Para remoção individual, selecionar apenas este usuário e executar bulk operation
       setSelectedUsers(new Set([userId]))
@@ -228,7 +232,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       const user = users.find((u) => u._id === userId)
       confirmDialog.confirm(
         'Cancelar Convite',
-        `Tem certeza que deseja cancelar o convite para ${user?.name || user?.email}?`,
+        `Tem certeza que deseja cancelar o convite para ${
+          user?.name || user?.email
+        }?`,
         async () => {
           try {
             await userService.cancelInvitation(userId)
@@ -260,7 +266,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         selectedUsers={selectedUsers}
         handleBulkOperation={handleBulkOperation}
         handleSelectAll={handleSelectAll}
-        usersNumber={users.length}
+        users={users}
       />
       <UserFilters
         showFilters={showFilters}
@@ -284,6 +290,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         isOpen={isEditUserModalOpen}
         setSelectedUser={setSelectedUser}
         user={selectedUser || null}
+        onUpdateUser={loadUsers}
       />
       <InviteUserModal
         isOpen={isInviteUserModalOpen}
@@ -292,7 +299,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
           loadUsers()
         }}
       />
-      
+
       {/* Dialog de confirmação */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}

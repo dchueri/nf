@@ -10,21 +10,13 @@ import {
 import { Button } from '../../ui/Button'
 import { User } from '../../../types/user'
 import { InvoiceStatus } from '../../../types/invoice'
-import { UserFilterType } from './UserFilters'
 import dayjs from 'dayjs'
 
 interface UserTableProps {
   users: User[]
   selectedMonth: string
-  selectedFilter: UserFilterType
   onUserAction?: (userId: string, action: string) => void
   className?: string
-}
-
-interface UserTableFilters {
-  users: User[]
-  selectedFilter: UserFilterType
-  selectedMonth: string
 }
 
 const getStatusIcon = (status: InvoiceStatus) => {
@@ -107,28 +99,12 @@ const getUserActualMonth = (user: User, selectedMonth: string) => {
   return user.monthsWithInvoices.find((month) => month.month === selectedMonth)
 }
 
-const filterUsers = ({
-  users,
-  selectedFilter,
-  selectedMonth
-}: UserTableFilters) => {
-  console.log('users', users)
-  return users?.filter((user) => {
-    if (selectedFilter === 'all') return true
-    const userActualMonth = getUserActualMonth(user, selectedMonth)
-    return userActualMonth?.status === selectedFilter
-  })
-}
-
 export const UserTable: React.FC<UserTableProps> = ({
   users,
   selectedMonth,
-  selectedFilter,
   onUserAction,
   className = ''
 }) => {
-  const filteredUsers = filterUsers({ users, selectedFilter, selectedMonth })
-
   const handleUserAction = (userId: string, action: string) => {
     if (onUserAction) {
       onUserAction(userId, action)
@@ -142,7 +118,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-medium text-gray-900">
           Status dos Usuários - {formatMonthDisplay(selectedMonth)} (
-          {filteredUsers.length})
+          {users.length})
         </h2>
       </div>
 
@@ -171,7 +147,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.map((user, index) => {
+            {users.map((user, index) => {
               const userActualMonth = getUserActualMonth(
                 user,
                 selectedMonth
@@ -304,7 +280,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         </table>
       </div>
 
-      {filteredUsers.length === 0 && (
+      {users.length === 0 && (
         <div className="text-center py-12">
           <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">

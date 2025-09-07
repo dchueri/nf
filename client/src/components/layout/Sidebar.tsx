@@ -22,7 +22,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['collaborator', 'manager'] },
   { name: 'Minhas Notas', href: '/invoices', icon: DocumentTextIcon, roles: ['collaborator'] },
   { name: 'Todas as Notas', href: '/invoices', icon: DocumentTextIcon, roles: ['manager'] },
-  { name: 'Relatórios', href: '/reports', icon: ChartBarIcon, roles: ['manager'] },
+  // { name: 'Relatórios', href: '/reports', icon: ChartBarIcon, roles: ['manager'] },
   { name: 'Usuários', href: '/users', icon: UsersIcon, roles: ['manager'] },
   { name: 'Configurações', href: '/settings', icon: CogIcon, roles: ['manager'] },
 ];
