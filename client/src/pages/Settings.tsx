@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   UserIcon,
@@ -8,6 +8,7 @@ import {
 import { MyProfile } from 'components/settings/MyProfile'
 import { MyCompany } from 'components/settings/MyCompany'
 import { Security } from 'components/settings/Security'
+import { Company, useCompanyService } from 'services/companyService'
 
 interface SettingsSection {
   id: string
@@ -19,6 +20,18 @@ interface SettingsSection {
 
 export const Settings: React.FC = () => {
   const [activeSection, setActiveSection] = useState('profile')
+  const [company, setCompany] = useState<Company | null>(null)
+  const { getMyCompany } = useCompanyService()
+
+  const handleUpdateCompany = () => {
+    getMyCompany().then((response) => {
+      setCompany(response.data)
+    })
+  }
+
+  useEffect(() => {
+    handleUpdateCompany()
+  }, [])
 
   const settingsSections: SettingsSection[] = [
     {
@@ -33,7 +46,7 @@ export const Settings: React.FC = () => {
       title: 'Minha Empresa',
       description: 'Gerencie as configurações da sua empresa',
       icon: BuildingOfficeIcon,
-      content: <MyCompany />
+      content: <MyCompany company={company} afterUpdate={handleUpdateCompany} />
     },
     // {
     //   id: 'notifications',

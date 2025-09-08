@@ -17,7 +17,7 @@ export const MyProfile = () => {
 
   const handleUpdateUser = async () => {
     try {
-      await updateUser(user?._id || '', {
+      await updateUser('me', {
         name: formData.name,
         phone: formData.phone
       })

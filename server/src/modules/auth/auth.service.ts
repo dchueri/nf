@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import * as bcrypt from 'bcryptjs';
 import { UserStatus } from '../users/schemas/user.schema';
+import { comparePassword, hashPassword } from '../../utils/crypt';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
     if (user && user.status === UserStatus.SUSPENDED) {
       throw new UnauthorizedException('Usuário suspenso, entre em contato com o administrador');
     }
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && await comparePassword(password, user.password)) {
       const { password, ...result } = user.toObject();
       return result;
     }
@@ -59,7 +59,7 @@ export class AuthService {
       throw new ConflictException('Usuário com este email já existe');
     }
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const hashedPassword = await hashPassword(createUserDto.password);
 
     const userData = {
       ...createUserDto,

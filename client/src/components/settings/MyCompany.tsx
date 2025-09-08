@@ -3,8 +3,13 @@ import { Button } from '../ui/Button'
 import { Company, useCompanyService } from 'services/companyService'
 import { useToastHelpers } from 'components/ui/Toast'
 
-export const MyCompany = () => {
-  const [company, setCompany] = useState<Company | null>(null)
+export const MyCompany = ({
+  company,
+  afterUpdate
+}: {
+  company: Company | null
+  afterUpdate: () => void
+}) => {
   const [formData, setFormData] = useState({
     name: company?.name || '',
     cnpj: company?.cnpj || '',
@@ -17,27 +22,8 @@ export const MyCompany = () => {
     deadlineDaysFromStart: company?.settings?.deadline.daysFromStart || 5, // Dias úteis do início do mês
     deadlineDaysFromEnd: company?.settings?.deadline.daysFromEnd || 5 // Dias úteis do fim do mês
   })
-  const { getMyCompany, updateCompany } = useCompanyService()
+  const { updateCompany } = useCompanyService()
   const toast = useToastHelpers()
-
-  useEffect(() => {
-    getMyCompany().then((response) => {
-      setCompany(response.data)
-      setFormData({
-        name: response.data.name,
-        cnpj: response.data.cnpj,
-        email: response.data.email,
-        emailNotifications: response.data.settings?.emailNotifications,
-        deadlineStrategy:
-          response.data.settings?.deadline.strategy ||
-          ('fixed_day' as 'fixed_day' | 'start_month' | 'end_month'),
-        deadlineDay: response.data.settings?.deadline.day || 15,
-        deadlineDaysFromStart:
-          response.data.settings?.deadline.daysFromStart || 5,
-        deadlineDaysFromEnd: response.data.settings?.deadline.daysFromEnd || 5
-      })
-    })
-  }, [])
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
@@ -61,11 +47,14 @@ export const MyCompany = () => {
           daysFromEnd: formData.deadlineDaysFromEnd
         }
       }
-    }).then(() => {
-      toast.success('Empresa atualizada com sucesso')
-    }).catch((error) => {
-      toast.error('Erro ao atualizar empresa', (error as Error).message)
     })
+      .then(() => {
+        afterUpdate()
+        toast.success('Empresa atualizada com sucesso')
+      })
+      .catch((error) => {
+        toast.error('Erro ao atualizar empresa', (error as Error).message)
+      })
   }
 
   const formatDateForDisplay = (dateString: string) => {
@@ -234,8 +223,8 @@ export const MyCompany = () => {
                 <option value="disabled">Desativado</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                Enviaremos todas as notas fiscais aprovadas automaticamente para o e-mail configurado
-                após o termino do prazo
+                Enviaremos todas as notas fiscais aprovadas automaticamente para
+                o e-mail configurado após o termino do prazo
               </p>
             </div>
           </div>

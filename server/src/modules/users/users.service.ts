@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginatedResponseDto } from 'src/common/dto/response.dto';
 import { InvoiceStatus } from '../invoices/schemas/invoice.schema';
+import { comparePassword, hashPassword } from '../../utils/crypt';
 
 @Injectable()
 export class UsersService {
@@ -162,6 +164,21 @@ export class UsersService {
       if (existingUser) {
         throw new ConflictException('Email já está em uso por outro usuário');
       }
+    }
+
+    if (updateUserDto.password) {
+      const user = await this.userModel.findById(id).exec();
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+      const isPasswordValid = await comparePassword(
+        updateUserDto.password,
+        user.password,
+      );
+      if (!isPasswordValid) {
+        throw new BadRequestException('Senha incorreta');
+      }
+      updateUserDto.password = await hashPassword(updateUserDto.newPassword);
     }
 
     const updatedUser = await this.userModel

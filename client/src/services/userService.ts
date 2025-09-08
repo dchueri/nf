@@ -26,8 +26,11 @@ export interface UpdateUserData {
   phone?: string
   department?: string
   avatar?: string
+  password?: string
+  newPassword?: string
   status?: 'active' | 'inactive' | 'suspended'
 }
+
 
 export interface UserFilters {
   search?: string

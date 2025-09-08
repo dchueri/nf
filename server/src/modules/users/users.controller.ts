@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -113,6 +114,16 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   findOne(@Param('id') id: string) {
     return this.usersService.findById(id);
+  }
+
+  @Patch('me')
+  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
+  @ApiOperation({ summary: 'Atualizar usuário' })
+  @ApiResponse({ status: 200, description: 'Usuário atualizado' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  @ApiResponse({ status: 403, description: 'Acesso negado' })
+  updateMe(@Body() updateUserDto: UpdateUserDto, @Req() req) {
+    return this.usersService.update(req.user.sub, updateUserDto);
   }
 
   @Patch(':id')

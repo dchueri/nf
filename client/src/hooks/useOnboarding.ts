@@ -43,8 +43,24 @@ export const useOnboarding = () => {
       // Formatar dados para envio
       const formattedData = formatCompanyDataForSubmission(companyData)
       
+      // Adicionar campos obrigatórios
+      const completeData = {
+        ...formattedData,
+        email: formattedData.email || '', // Garantir que email não seja undefined
+        settings: {
+          emailNotifications: true,
+          deadline: {
+            strategy: 'fixed_day' as const,
+            day: 5,
+            daysFromStart: 0,
+            daysFromEnd: 0
+          }
+        },
+        status: 'active' as const
+      }
+      
       // Criar a empresa
-      const response = await companyService.createCompany(formattedData)
+      const response = await companyService.createCompany(completeData)
       console.log(response)
       
       // Atualizar o usuário com o companyId
