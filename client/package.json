@@ -29,6 +29,7 @@
     "@types/react-datepicker": "^7.0.0",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.11.0",
+    "brazilian-values": "^0.13.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.18",

@@ -1,24 +1,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { Skeleton } from './Skeleton'
 
 interface SkeletonProps {
   className?: string
   animate?: boolean
-}
-
-export const Skeleton: React.FC<SkeletonProps> = ({ 
-  className = '', 
-  animate = true 
-}) => {
-  const baseClasses = 'bg-gray-200 rounded animate-pulse'
-  const animationClasses = animate ? 'animate-pulse' : ''
-  
-  return (
-    <div 
-      className={`${baseClasses} ${animationClasses} ${className}`}
-      aria-hidden="true"
-    />
-  )
 }
 
 // Skeleton para cards
@@ -80,8 +66,8 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
 // Skeleton para dashboard stats
 export const StatsSkeleton: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {Array.from({ length: 3 }).map((_, i) => (
         <motion.div
           key={i}
           initial={{ opacity: 0, y: 20 }}
@@ -89,13 +75,7 @@ export const StatsSkeleton: React.FC = () => {
           transition={{ delay: i * 0.1 }}
           className="bg-white rounded-lg border border-gray-200 p-6"
         >
-          <div className="flex items-center">
-            <Skeleton className="h-8 w-8 rounded" />
-            <div className="ml-4 flex-1 space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-6 w-16" />
-            </div>
-          </div>
+          
         </motion.div>
       ))}
     </div>

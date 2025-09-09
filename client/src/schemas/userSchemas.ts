@@ -3,9 +3,26 @@ import { UserRole, UserStatus } from '../types/user'
 
 // Schema para validação de email
 const emailSchema = z
-  .string()
-  .min(1, 'Email é obrigatório')
   .email('Email deve ser válido')
+  .min(1, 'Email é obrigatório')
+  .min(5, 'Email deve ter pelo menos 5 caracteres')
+  .max(254, 'Email deve ter no máximo 254 caracteres')
+  .regex(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Formato de email inválido'
+  )
+  .refine((email) => {
+    // Verificar se não contém espaços
+    return !email.includes(' ')
+  }, 'Email não pode conter espaços')
+  .refine((email) => {
+    // Verificar se não começa ou termina com ponto
+    return !email.startsWith('.') && !email.endsWith('.')
+  }, 'Email não pode começar ou terminar com ponto')
+  .refine((email) => {
+    // Verificar se não tem pontos consecutivos
+    return !email.includes('..')
+  }, 'Email não pode ter pontos consecutivos')
   .toLowerCase()
   .trim()
 
@@ -36,9 +53,15 @@ const roleSchema = z
 const statusSchema = z
   .enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED])
   .transform((val) => val as UserStatus)
-  .refine((val) => [UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED].includes(val), {
-    message: 'Status deve ser Ativo, Inativo ou Suspenso'
-  })
+  .refine(
+    (val) =>
+      [UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.SUSPENDED].includes(
+        val
+      ),
+    {
+      message: 'Status deve ser Ativo, Inativo ou Suspenso'
+    }
+  )
 
 // Schema principal para edição de usuário
 export const editUserSchema = z.object({
@@ -68,51 +91,63 @@ export const validateInviteUser = (data: unknown): InviteUserData => {
 }
 
 // Função para validar dados de edição com erros customizados
-export const validateEditUserSafe = (data: unknown): { success: true; data: EditUserData } | { success: false; errors: Record<string, string> } => {
+export const validateEditUserSafe = (
+  data: unknown
+):
+  | { success: true; data: EditUserData }
+  | { success: false; errors: Record<string, string> } => {
   const result = editUserSchema.safeParse(data)
-  
+
   if (result.success) {
     return { success: true, data: result.data }
   }
-  
+
   const errors: Record<string, string> = {}
   result.error.issues.forEach((issue) => {
     const field = issue.path[0] as string
     errors[field] = issue.message
   })
-  
+
   return { success: false, errors }
 }
 
 // Função para validar dados de convite com erros customizados
-export const validateInviteUserSafe = (data: unknown): { success: true; data: InviteUserData } | { success: false; errors: Record<string, string> } => {
+export const validateInviteUserSafe = (
+  data: unknown
+):
+  | { success: true; data: InviteUserData }
+  | { success: false; errors: Record<string, string> } => {
   const result = inviteUserSchema.safeParse(data)
-  
+
   if (result.success) {
     return { success: true, data: result.data }
   }
-  
+
   const errors: Record<string, string> = {}
   result.error.issues.forEach((issue) => {
     const field = issue.path[0] as string
     errors[field] = issue.message
   })
-  
+
   return { success: false, errors }
 }
 
 // Função para limpar e formatar dados para envio
-export const formatEditUserDataForSubmission = (formData: EditUserData): EditUserData => {
+export const formatEditUserDataForSubmission = (
+  formData: EditUserData
+): EditUserData => {
   return {
     name: formData.name.trim(),
     role: formData.role,
-    department: formData.department?.trim() || undefined,
+    department: formData.department?.trim() || '',
     status: formData.status
   }
 }
 
 // Função para limpar e formatar dados de convite para envio
-export const formatInviteUserDataForSubmission = (formData: InviteUserData): InviteUserData => {
+export const formatInviteUserDataForSubmission = (
+  formData: InviteUserData
+): InviteUserData => {
   return {
     email: formData.email.trim().toLowerCase()
   }

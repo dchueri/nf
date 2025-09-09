@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useUser } from '../../contexts/UserContext'
 import { useAuth } from '../../hooks/useAuth'
 import { Skeleton } from '../ui/Skeleton'
+import { LoadingSpinner } from 'components/ui/LoadingSpinner'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -38,19 +39,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Show loading skeleton while checking authentication
   if (isLoading || isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <Skeleton height="4rem" width="12rem" className="mx-auto mb-4" />
-            <Skeleton height="1.5rem" width="16rem" className="mx-auto" />
-          </div>
-          <div className="bg-white p-8 rounded-lg shadow-lg space-y-6">
-            <Skeleton height="3rem" width="100%" />
-            <Skeleton height="3rem" width="100%" />
-            <Skeleton height="3rem" width="100%" />
-          </div>
-        </div>
-      </div>
+      <LoadingSpinner />
     )
   }
 

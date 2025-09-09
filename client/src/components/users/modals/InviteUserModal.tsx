@@ -9,6 +9,7 @@ import { Modal } from '../../ui/Modal'
 import { Button } from '../../ui/Button'
 import { LoadingSpinner } from '../../ui/LoadingSpinner'
 import { FeedbackMessage } from '../../ui/FeedbackMessage'
+import { BigTextField } from '../../ui/BigTextField'
 import {
   validateInviteUserSafe,
   formatInviteUserDataForSubmission,
@@ -27,7 +28,7 @@ interface FormErrors {
 
 export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   isOpen,
-  onClose,
+  onClose
 }) => {
   const [formData, setFormData] = useState<InviteUserData>({
     email: ''
@@ -37,8 +38,8 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
 
+  console.log('isSuccess', isSuccess)
   const onInviteSent = useCallback((email: string) => {
-    console.log('Invite sent to:', email)
     userService.inviteUser(email)
   }, [])
 
@@ -53,67 +54,61 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
     }
   }, [formData])
 
-  const handleInputChange = useCallback((value: string) => {
-    setFormData({ email: value })
-    if (errors.email) {
-      setErrors(prev => ({ ...prev, email: undefined }))
-    }
-    setError(null)
-  }, [errors.email])
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setFormData({ email: value })
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const formattedData = formatInviteUserDataForSubmission(formData)
-      
-      if (process.env.NODE_ENV === 'development') {
-        // Simular chamada da API
-        await new Promise(resolve => setTimeout(resolve, 800))
-        console.log('Sending invite:', formattedData)
-        
-        // Simular sucesso
-        setIsSuccess(true)
-        onInviteSent(formattedData.email)
-        
-        // Fechar modal após 1.5 segundos
-        setTimeout(() => {
-          handleClose()
-        }, 1500)
-      } else {
-        // TODO: Implementar chamada real da API
-        // await userService.inviteUser(formattedData)
-        // setIsSuccess(true)
-        // onInviteSent(formattedData.email)
-        // setTimeout(() => handleClose(), 1500)
+      // Limpar erro do campo quando usuário começar a digitar
+      if (errors.email) {
+        setErrors((prev) => ({ ...prev, email: undefined }))
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar convite')
-      console.error('Error sending invite:', err)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [formData, validateForm, onInviteSent])
+
+      // Limpar erro geral
+      setError(null)
+
+      // Validação em tempo real (opcional - apenas para feedback visual)
+      if (value.trim().length > 0) {
+        const validation = validateInviteUserSafe({ email: value })
+        if (!validation.success) {
+          // Não definir erro imediatamente, apenas quando o usuário parar de digitar
+          // ou tentar submeter o formulário
+        }
+      }
+    },
+    [errors.email]
+  )
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!validateForm()) return
+
+      setIsSubmitting(true)
+      setError(null)
+
+      try {
+        const formattedData = formatInviteUserDataForSubmission(formData)
+
+        onInviteSent(formattedData.email)
+        setIsSuccess(true)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao enviar convite')
+        console.error('Error sending invite:', err)
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [formData, validateForm, onInviteSent]
+  )
 
   const handleClose = useCallback(() => {
-    if (!isSubmitting) {
+      console.log('handleClose', isSubmitting)
       setFormData({ email: '' })
       setErrors({})
       setError(null)
       setIsSuccess(false)
       onClose()
-    }
-  }, [isSubmitting, onClose])
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isSubmitting) {
-      handleSubmit(e as any)
-    }
-  }, [handleSubmit, isSubmitting])
+  }, [onClose]) 
 
   if (isSuccess) {
     return (
@@ -124,7 +119,6 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
         subtitle="O convite foi enviado com sucesso"
         size="sm"
         icon={<CheckCircleIcon className="h-6 w-6 text-green-600" />}
-        disabled={true}
       >
         <div className="text-center py-8">
           <motion.div
@@ -135,7 +129,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
           >
             <CheckCircleIcon className="h-8 w-8 text-green-600" />
           </motion.div>
-          
+
           <motion.h3
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -144,7 +138,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
           >
             Convite Enviado!
           </motion.h3>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,15 +146,6 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             className="text-sm text-gray-600"
           >
             O convite foi enviado para <strong>{formData.email}</strong>
-          </motion.p>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xs text-gray-500 mt-2"
-          >
-            Fechando automaticamente...
           </motion.p>
         </div>
       </Modal>
@@ -197,43 +182,40 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
             >
               <EnvelopeIcon className="h-10 w-10 text-blue-600" />
             </motion.div>
-            
+
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Digite o email
             </h3>
-            
+
             <p className="text-sm text-gray-600 mb-6">
               O usuário receberá um convite por email
             </p>
           </div>
 
-          <div className="relative">
-            <EnvelopeIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className={`w-full pl-12 pr-4 py-4 text-lg border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                errors.email 
-                  ? 'border-red-300 bg-red-50' 
-                  : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
-              }`}
-              placeholder="usuario@empresa.com"
-              disabled={isSubmitting}
-              autoFocus
-            />
-          </div>
-          
-          {errors.email && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 text-center"
-            >
-              {errors.email}
-            </motion.p>
-          )}
+          <BigTextField
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            onBlur={() => {
+              // Validar quando o usuário sair do campo
+              if (formData.email.trim().length > 0) {
+                const validation = validateInviteUserSafe({
+                  email: formData.email
+                })
+                if (!validation.success) {
+                  setErrors(validation.errors)
+                }
+              }
+            }}
+            placeholder="usuario@empresa.com"
+            disabled={isSubmitting}
+            autoFocus
+            autoComplete="email"
+            spellCheck={false}
+            icon={<EnvelopeIcon className="h-5 w-5" />}
+            error={errors.email}
+            onEnter={handleSubmit}
+          />
         </div>
 
         {/* Actions */}
@@ -250,8 +232,12 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
           <Button
             type="submit"
             variant="primary"
-            disabled={isSubmitting || !formData.email.trim()}
-            className="flex items-center space-x-2 min-w-[120px]"
+            disabled={isSubmitting || !formData.email.trim() || !!errors.email}
+            className={`flex items-center space-x-2 min-w-[120px] transition-all ${
+              formData.email.trim() && !errors.email
+                ? 'bg-green-600 hover:bg-green-700'
+                : ''
+            }`}
           >
             {isSubmitting ? (
               <>
@@ -265,13 +251,6 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
               </>
             )}
           </Button>
-        </div>
-
-        {/* Quick Tips */}
-        <div className="text-center pt-2">
-          <p className="text-xs text-gray-500">
-            💡 Pressione <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> para enviar rapidamente
-          </p>
         </div>
       </form>
     </Modal>

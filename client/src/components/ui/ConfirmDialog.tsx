@@ -9,7 +9,7 @@ interface ConfirmDialogProps {
   onClose: () => void
   onConfirm: () => void
   title: string
-  message: string
+  message: string | React.ReactNode
   confirmText?: string
   cancelText?: string
   variant?: 'danger' | 'warning' | 'info'
@@ -159,7 +159,7 @@ export const useConfirmDialog = () => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [config, setConfig] = React.useState<{
     title: string
-    message: string
+    message: string | React.ReactNode
     onConfirm: () => void
     variant?: 'danger' | 'warning' | 'info'
   } | null>(null)
@@ -167,7 +167,7 @@ export const useConfirmDialog = () => {
   const confirm = React.useCallback(
     (
       title: string,
-      message: string,
+      message: string | React.ReactNode,
       onConfirm: () => void,
       variant: 'danger' | 'warning' | 'info' = 'danger'
     ) => {

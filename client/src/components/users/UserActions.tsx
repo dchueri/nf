@@ -13,7 +13,7 @@ export const UserActions = ({
   searchQuery: string
   setSearchQuery: (searchQuery: string) => void
   selectedUsers: Set<string>
-  handleBulkOperation: (operation: BulkUserOperation['operation']) => void
+  handleBulkOperation: (operation: BulkUserOperation['operation'], usersSet?: Set<string>) => void
   handleSelectAll: () => void
   users: User[]
 }) => {

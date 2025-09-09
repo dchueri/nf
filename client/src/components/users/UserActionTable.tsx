@@ -6,6 +6,7 @@ import { UserCircleIcon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { Badge } from '../ui/Badge'
+import { SkeletonTableLine } from 'components/ui/Skeleton/SkeletonTableLine'
 
 export const UserActionTable = ({
   users,
@@ -88,12 +89,9 @@ export const UserActionTable = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Carregando usuários...</p>
-                </td>
-              </tr>
+              Array.from({ length: 3 }).map((_, index) => (
+                <SkeletonTableLine className="h-16" columns={6} key={index} />
+              ))
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
@@ -102,7 +100,7 @@ export const UserActionTable = ({
               </tr>
             ) : (
               users.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
+                <tr key={user._id} className="hover:bg-gray-50 cursor-pointer">
                   <td
                     onClick={() => handleSelect(user._id)}
                     className="px-6 py-4 whitespace-nowrap"
@@ -113,7 +111,10 @@ export const UserActionTable = ({
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    onClick={() => handleSelect(user._id)}
+                    className="px-6 py-4 whitespace-nowrap"
+                  >
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <UserCircleIcon className="h-10 w-10 text-gray-400" />
@@ -128,38 +129,46 @@ export const UserActionTable = ({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    onClick={() => handleSelect(user._id)}
+                    className="px-6 py-4 whitespace-nowrap"
+                  >
                     <Badge
                       label={getRoleLabel(user.role)}
                       className={getRoleColor(user.role)}
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td
+                    onClick={() => handleSelect(user._id)}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                  >
                     <StatusBadge
                       type="user"
                       status={user.status as UserStatus}
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td
+                    onClick={() => handleSelect(user._id)}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                  >
                     -
                   </td>
                   {user.status !== UserStatus.PENDING ? (
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <button
-                          className="text-indigo-600 hover:text-indigo-900"
+                        <Button
                           title="Editar"
                           onClick={() => onAction(user._id, 'edit')}
                         >
                           <PencilIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
+                        </Button>
+                        <Button
                           title="Remover"
+                          variant="danger"
                           onClick={() => onAction(user._id, 'remove')}
                         >
                           <TrashIcon className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   ) : (

@@ -201,16 +201,13 @@ export const ManagerDashboard: React.FC = () => {
         navigateMonth={navigateMonth}
       />
 
-      {dataLoading ? <StatsSkeleton /> : <UserStats stats={stats} />}
+      <UserStats stats={stats} />
 
       <UserFilters
         selectedFilter={selectedFilter}
         onFilterChange={setSelectedFilter}
       />
 
-      {dataLoading ? (
-        <TableSkeleton rows={5} columns={6} />
-      ) : (
         <UserTable
           users={users}
           selectedMonth={selectedMonth}
@@ -218,8 +215,8 @@ export const ManagerDashboard: React.FC = () => {
             console.log('User action:', userId, action)
             // Implementar ações específicas aqui
           }}
+          loading={dataLoading}
         />
-      )}
     </div>
   )
 }

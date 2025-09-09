@@ -5,6 +5,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Skeleton, SkeletonCard } from './components/ui/Skeleton';
+import { LoadingSpinner } from 'components/ui/LoadingSpinner';
 
 // Lazy loading das páginas
 const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -18,17 +19,7 @@ const CompanyOnboarding = lazy(() => import('./pages/onboarding/CompanyOnboardin
 // Loading fallback component
 const PageLoading = () => (
   <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div className="space-y-2">
-        <Skeleton height="2rem" width="12rem" />
-        <Skeleton height="1rem" width="24rem" />
-      </div>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <SkeletonCard key={i} />
-      ))}
-    </div>
+    <LoadingSpinner />
   </div>
 );
 

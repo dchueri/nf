@@ -2,6 +2,43 @@ import React, { useEffect, useState } from 'react'
 import { Button } from '../ui/Button'
 import { Company, useCompanyService } from 'services/companyService'
 import { useToastHelpers } from 'components/ui/Toast'
+import { TextField } from '../ui/TextField'
+import { z } from 'zod'
+import { formatToCNPJ, isCNPJ } from 'brazilian-values'
+
+// Schema Zod para validação de empresa
+const companySchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Nome da empresa é obrigatório')
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(100, 'Nome deve ter no máximo 100 caracteres')
+    .trim(),
+  cnpj: z
+    .string()
+    .min(1, 'CNPJ é obrigatório')
+    .refine((cnpj) => isCNPJ(cnpj), 'CNPJ inválido'),
+  email: z
+    .string()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido'),
+  emailNotifications: z.boolean(),
+  deadlineStrategy: z.enum(['fixed_day', 'start_month', 'end_month']),
+  deadlineDay: z
+    .number()
+    .min(1, 'Dia deve ser entre 1 e 31')
+    .max(31, 'Dia deve ser entre 1 e 31'),
+  deadlineDaysFromStart: z
+    .number()
+    .min(1, 'Dias deve ser entre 1 e 31')
+    .max(31, 'Dias deve ser entre 1 e 31'),
+  deadlineDaysFromEnd: z
+    .number()
+    .min(1, 'Dias deve ser entre 1 e 31')
+    .max(31, 'Dias deve ser entre 1 e 31')
+})
+
+type CompanyData = z.infer<typeof companySchema>
 
 export const MyCompany = ({
   company,
@@ -10,7 +47,7 @@ export const MyCompany = ({
   company: Company | null
   afterUpdate: () => void
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CompanyData>({
     name: company?.name || '',
     cnpj: company?.cnpj || '',
     email: company?.email || '',
@@ -22,39 +59,75 @@ export const MyCompany = ({
     deadlineDaysFromStart: company?.settings?.deadline.daysFromStart || 5, // Dias úteis do início do mês
     deadlineDaysFromEnd: company?.settings?.deadline.daysFromEnd || 5 // Dias úteis do fim do mês
   })
+  const [errors, setErrors] = useState<Partial<Record<keyof CompanyData, string>>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { updateCompany } = useCompanyService()
   const toast = useToastHelpers()
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const validateForm = () => {
+    try {
+      companySchema.parse(formData)
+      setErrors({})
+      return true
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Partial<Record<keyof CompanyData, string>> = {}
+        error.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            fieldErrors[issue.path[0] as keyof CompanyData] = issue.message
+          }
+        })
+        setErrors(fieldErrors)
+      }
+      return false
+    }
+  }
+
+  const handleInputChange = (field: keyof CompanyData, value: string | number | boolean) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value
     }))
+    // Limpar erro do campo quando usuário começar a digitar
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }))
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTextFieldChange = (field: keyof CompanyData) => (value: string) => {
+    handleInputChange(field, value)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    updateCompany({
-      name: formData.name,
-      cnpj: formData.cnpj,
-      email: formData.email,
-      settings: {
-        emailNotifications: formData.emailNotifications,
-        deadline: {
-          strategy: formData.deadlineStrategy,
-          day: formData.deadlineDay,
-          daysFromStart: formData.deadlineDaysFromStart,
-          daysFromEnd: formData.deadlineDaysFromEnd
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await updateCompany({
+        name: formData.name.trim(),
+        cnpj: formData.cnpj.trim(),
+        email: formData.email.trim(),
+        settings: {
+          emailNotifications: formData.emailNotifications,
+          deadline: {
+            strategy: formData.deadlineStrategy,
+            day: formData.deadlineDay,
+            daysFromStart: formData.deadlineDaysFromStart,
+            daysFromEnd: formData.deadlineDaysFromEnd
+          }
         }
-      }
-    })
-      .then(() => {
-        afterUpdate()
-        toast.success('Empresa atualizada com sucesso')
       })
-      .catch((error) => {
-        toast.error('Erro ao atualizar empresa', (error as Error).message)
-      })
+      toast.success('Empresa atualizada com sucesso!')
+      afterUpdate()
+    } catch (error) {
+      toast.error('Erro ao atualizar empresa', (error as Error).message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const formatDateForDisplay = (dateString: string) => {
@@ -161,25 +234,25 @@ export const MyCompany = ({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome da Empresa
-              </label>
-              <input
+              <TextField
                 type="text"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={handleTextFieldChange('name')}
+                placeholder="Nome da empresa"
+                error={errors.name}
+                disabled={isSubmitting}
+                label="Nome da Empresa"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CNPJ
-              </label>
-              <input
+              <TextField
                 type="text"
-                value={formData.cnpj}
-                onChange={(e) => handleInputChange('cnpj', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formatToCNPJ(formData.cnpj)}
+                onChange={handleTextFieldChange('cnpj')}
+                placeholder="00.000.000/0000-00"
+                error={errors.cnpj}
+                disabled={isSubmitting}
+                label="CNPJ"
               />
             </div>
           </div>
@@ -193,15 +266,14 @@ export const MyCompany = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                E-mail para Recebimento
-              </label>
-              <input
+              <TextField
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={handleTextFieldChange('email')}
                 placeholder="email@empresa.com"
+                error={errors.email}
+                disabled={isSubmitting}
+                label="E-mail para Recebimento"
               />
               <p className="mt-1 text-xs text-gray-500">
                 E-mail que receberá as notas fiscais dos colaboradores
@@ -405,7 +477,9 @@ export const MyCompany = ({
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">Salvar Alterações</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+        </Button>
       </div>
     </form>
   )

@@ -110,35 +110,50 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   }
 
   const handleBulkOperation = async (
-    operation: BulkUserOperation['operation']
+    operation: BulkUserOperation['operation'],
+    usersSet?: Set<string>
   ) => {
-    if (selectedUsers.size === 0) return
+    console.log('handleBulkOperation', operation, selectedUsers.size)
+    const usersSetToUse = usersSet || selectedUsers
+    if (usersSetToUse.size === 0) return
 
     // Se for remoção, pedir confirmação
     if (operation === 'remove') {
-      const userCount = selectedUsers.size
+      const userCount = usersSetToUse.size
       const userText = userCount === 1 ? 'usuário' : 'usuários'
+      const text = usersSet
+        ? users
+            .filter((user) => usersSet.has(user._id))
+            .map((user) => user.name)
+            .join(', ')
+        : `${userCount} ${userText}`
 
       confirmDialog.confirm(
         'Excluir Usuários',
-        `Tem certeza que deseja excluir ${userCount} ${userText}? Esta ação não poderá ser desfeita.`,
-        () => executeBulkOperation(operation),
+        <p>
+          Tem certeza que deseja excluir{' '}
+          <span className="font-bold">{text}</span>? Esta ação não poderá ser
+          desfeita.
+        </p>,
+        () => executeBulkOperation(operation, usersSetToUse),
         'danger'
       )
       return
     }
 
     // Para outras operações, executar diretamente
-    await executeBulkOperation(operation)
+    await executeBulkOperation(operation, usersSetToUse)
   }
 
   const executeBulkOperation = async (
-    operation: BulkUserOperation['operation']
+    operation: BulkUserOperation['operation'],
+    usersSet: Set<string>
   ) => {
     try {
+      const usersSetToUse = usersSet.size > 0 ? usersSet : selectedUsers
       const bulkOp: BulkUserOperation = {
         operation,
-        users: Array.from(selectedUsers)
+        users: Array.from(usersSetToUse)
       }
       console.log('bulkOp', bulkOp)
 
@@ -150,7 +165,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         // Update local state
         if (operation === 'remove') {
           await userService.bulkUpdateStatus(
-            Array.from(selectedUsers),
+            Array.from(usersSetToUse),
             'inactive'
           )
           setUsers(users.filter((user) => !selectedUsers.has(user._id)))
@@ -205,7 +220,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     if (action === 'remove') {
       // Para remoção individual, selecionar apenas este usuário e executar bulk operation
       setSelectedUsers(new Set([userId]))
-      handleBulkOperation('remove')
+
+      handleBulkOperation('remove', new Set([userId]))
       return
     }
     if (action === 'cancel-invite') {

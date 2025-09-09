@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* Right side - Notifications and user menu */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <NotificationDropdown />
+          {/* <NotificationDropdown /> */}
 
           {/* User menu */}
           <div className="relative">

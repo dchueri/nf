@@ -15,6 +15,8 @@ import { Button } from '../../ui/Button'
 import { LoadingSpinner } from '../../ui/LoadingSpinner'
 import { FeedbackMessage } from '../../ui/FeedbackMessage'
 import { ConfirmDialog, useConfirmDialog } from '../../ui/ConfirmDialog'
+import { TextField } from '../../ui/TextField'
+import { Select } from '../../ui/Select'
 import { UserAvatar } from '../UserAvatar'
 import { User, UserRole, UserStatus } from '../../../types/user'
 import {
@@ -283,86 +285,45 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </div>
 
         {/* Name Field */}
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Nome *
-          </label>
-          <div className="relative">
-            <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`w-full pl-10 pr-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Nome completo"
-              disabled={isSubmitting}
-            />
-          </div>
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-          )}
-        </div>
+        <TextField
+          type="text"
+          id="name"
+          value={formData.name}
+          onChange={(value) => handleInputChange('name', value)}
+          placeholder="Nome completo"
+          disabled={isSubmitting}
+          icon={<UserIcon className="h-5 w-5" />}
+          error={errors.name}
+          label="Nome *"
+        />
 
         {/* Role Field */}
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Função *
-          </label>
-          <div className="relative">
-            <ShieldCheckIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <select
-              id="role"
-              value={formData.role}
-              onChange={(e) => handleInputChange('role', e.target.value)}
-              className={`w-full pl-10 pr-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.role ? 'border-red-300' : 'border-gray-300'
-              }`}
-              disabled={isSubmitting}
-            >
-              <option value={UserRole.COLLABORATOR}>Colaborador</option>
-              <option value={UserRole.MANAGER}>Gestor</option>
-            </select>
-          </div>
-          {errors.role && (
-            <p className="mt-1 text-sm text-red-600">{errors.role}</p>
-          )}
-        </div>
+        <Select
+          id="role"
+          value={formData.role}
+          onChange={(value) => handleInputChange('role', value)}
+          disabled={isSubmitting}
+          icon={<ShieldCheckIcon className="h-5 w-5" />}
+          error={errors.role}
+          label="Função *"
+          options={[
+            { value: UserRole.COLLABORATOR, label: 'Colaborador' },
+            { value: UserRole.MANAGER, label: 'Gestor' }
+          ]}
+        />
 
         {/* Department Field */}
-        <div>
-          <label
-            htmlFor="department"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Departamento
-          </label>
-          <div className="relative">
-            <BuildingOfficeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              id="department"
-              value={formData.department || ''}
-              onChange={(e) => handleInputChange('department', e.target.value)}
-              className={`w-full pl-10 pr-3 py-1.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.department ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Ex: TI, Marketing, Vendas"
-              disabled={isSubmitting}
-            />
-          </div>
-          {errors.department && (
-            <p className="mt-1 text-sm text-red-600">{errors.department}</p>
-          )}
-        </div>
+        <TextField
+          type="text"
+          id="department"
+          value={formData.department || ''}
+          onChange={(value) => handleInputChange('department', value)}
+          placeholder="Ex: TI, Marketing, Vendas"
+          disabled={isSubmitting}
+          icon={<BuildingOfficeIcon className="h-5 w-5" />}
+          error={errors.department}
+          label="Departamento"
+        />
 
         {/* Status Actions */}
         <div>

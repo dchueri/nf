@@ -11,12 +11,15 @@ import { Button } from '../../ui/Button'
 import { User } from '../../../types/user'
 import { InvoiceStatus } from '../../../types/invoice'
 import dayjs from 'dayjs'
+import { TableSkeleton } from 'components/ui/SkeletonLoader'
+import { SkeletonTableLine } from 'components/ui/Skeleton/SkeletonTableLine'
 
 interface UserTableProps {
   users: User[]
   selectedMonth: string
   onUserAction?: (userId: string, action: string) => void
   className?: string
+  loading?: boolean
 }
 
 const getStatusIcon = (status: InvoiceStatus) => {
@@ -103,7 +106,8 @@ export const UserTable: React.FC<UserTableProps> = ({
   users,
   selectedMonth,
   onUserAction,
-  className = ''
+  className = '',
+  loading
 }) => {
   const handleUserAction = (userId: string, action: string) => {
     if (onUserAction) {
@@ -147,140 +151,152 @@ export const UserTable: React.FC<UserTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user, index) => {
-              const userActualMonth = getUserActualMonth(
-                user,
-                selectedMonth
-              ) || {
-                status: InvoiceStatus.PENDING,
-                submittedAt: ''
-              }
-              const actualMonthStatus = userActualMonth.status
+            {loading
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <SkeletonTableLine columns={6} key={index} />
+                ))
+              : users.map((user, index) => {
+                  const userActualMonth = getUserActualMonth(
+                    user,
+                    selectedMonth
+                  ) || {
+                    status: InvoiceStatus.PENDING,
+                    submittedAt: ''
+                  }
+                  const actualMonthStatus = userActualMonth.status
 
-              return (
-                <motion.tr
-                  key={user._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">
-                            {user.name.charAt(0)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {user.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.department || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        actualMonthStatus
-                      )}`}
+                  return (
+                    <motion.tr
+                      key={user._id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="hover:bg-gray-50"
                     >
-                      {getStatusLabel(actualMonthStatus)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {(() => {
-                      const delayStatus = getDelayStatus(actualMonthStatus)
-                      if (!delayStatus) return '-'
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-sm font-medium text-gray-700">
+                                {user.name.charAt(0)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.department || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                            actualMonthStatus
+                          )}`}
+                        >
+                          {getStatusLabel(actualMonthStatus)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {(() => {
+                          const delayStatus = getDelayStatus(actualMonthStatus)
+                          if (!delayStatus) return '-'
 
-                      if (delayStatus.isLate) {
-                        return (
-                          <span className="text-red-600 font-medium">
-                            ⚠️ {delayStatus.daysLate} dia(s) atrasado
-                          </span>
-                        )
-                      } else {
-                        return (
-                          <span className="text-green-600 font-medium">
-                            ⏰ {delayStatus.daysUntilDeadline} dia(s)
-                            restante(s)
-                          </span>
-                        )
-                      }
-                    })()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {userActualMonth.submittedAt
-                      ? formatDate(userActualMonth.submittedAt)
-                      : '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      {actualMonthStatus === InvoiceStatus.SUBMITTED && (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleUserAction(user._id, 'approve')}
-                          >
-                            Aprovar
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleUserAction(user._id, 'reject')}
-                          >
-                            Rejeitar
-                          </Button>
-                        </>
-                      )}
-                      {actualMonthStatus === InvoiceStatus.PENDING && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleUserAction(user._id, 'remind')}
-                        >
-                          Lembrar
-                        </Button>
-                      )}
-                      {actualMonthStatus !== InvoiceStatus.APPROVED && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() =>
-                            handleUserAction(user._id, 'ignore')
+                          if (delayStatus.isLate) {
+                            return (
+                              <span className="text-red-600 font-medium">
+                                ⚠️ {delayStatus.daysLate} dia(s) atrasado
+                              </span>
+                            )
+                          } else {
+                            return (
+                              <span className="text-green-600 font-medium">
+                                ⏰ {delayStatus.daysUntilDeadline} dia(s)
+                                restante(s)
+                              </span>
+                            )
                           }
-                        >
-                          Ignorar
-                        </Button>
-                      )}
-                      {actualMonthStatus !== InvoiceStatus.PENDING && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleUserAction(user._id, 'details')}
-                        >
-                          Ver Detalhes
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
-              )
-            })}
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {userActualMonth.submittedAt
+                          ? formatDate(userActualMonth.submittedAt)
+                          : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          {actualMonthStatus === InvoiceStatus.SUBMITTED && (
+                            <>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                  handleUserAction(user._id, 'approve')
+                                }
+                              >
+                                Aprovar
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                  handleUserAction(user._id, 'reject')
+                                }
+                              >
+                                Rejeitar
+                              </Button>
+                            </>
+                          )}
+                          {actualMonthStatus === InvoiceStatus.PENDING && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                handleUserAction(user._id, 'remind')
+                              }
+                            >
+                              Lembrar
+                            </Button>
+                          )}
+                          {actualMonthStatus !== InvoiceStatus.APPROVED && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                handleUserAction(user._id, 'ignore')
+                              }
+                            >
+                              Ignorar
+                            </Button>
+                          )}
+                          {actualMonthStatus !== InvoiceStatus.PENDING && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                handleUserAction(user._id, 'details')
+                              }
+                            >
+                              Ver Detalhes
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )
+                })}
           </tbody>
         </table>
       </div>
 
-      {users.length === 0 && (
+      {(users.length === 0 && !loading) && (
         <div className="text-center py-12">
           <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
