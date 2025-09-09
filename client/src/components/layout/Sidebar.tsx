@@ -105,20 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
         </div>
       </nav>
 
-      {/* User Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-              <UsersIcon className="h-4 w-4 text-gray-600" />
-            </div>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">Usuário Atual</p>
-            <p className="text-xs text-gray-500">admin@empresa.com</p>
-          </div>
-        </div>
-      </div>
     </motion.aside>
   );
 };
