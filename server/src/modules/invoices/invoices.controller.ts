@@ -25,14 +25,12 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { ResourceAccessGuard } from '../auth/guards/resource-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 
 @ApiTags('invoices')
 @Controller('invoices')
-@UseGuards(JwtAuthGuard, RolesGuard, ResourceAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
@@ -106,7 +104,6 @@ export class InvoicesController {
   }
 
   @Get(':id')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Obter nota fiscal por ID' })
   @ApiResponse({ status: 200, description: 'Nota fiscal encontrada' })
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })
@@ -116,7 +113,6 @@ export class InvoicesController {
   }
 
   @Patch(':id')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Atualizar nota fiscal' })
   @ApiResponse({ status: 200, description: 'Nota fiscal atualizada' })
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })
@@ -148,7 +144,6 @@ export class InvoicesController {
   }
 
   @Delete(':id')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Remover nota fiscal' })
   @ApiResponse({ status: 200, description: 'Nota fiscal removida' })
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })
@@ -158,7 +153,6 @@ export class InvoicesController {
   }
 
   @Get(':id/download')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Download do arquivo da nota fiscal' })
   @ApiResponse({ status: 200, description: 'Arquivo baixado' })
   @ApiResponse({ status: 404, description: 'Arquivo não encontrado' })

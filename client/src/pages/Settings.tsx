@@ -9,6 +9,8 @@ import { MyProfile } from 'components/settings/MyProfile'
 import { MyCompany } from 'components/settings/MyCompany'
 import { Security } from 'components/settings/Security'
 import { Company, useCompanyService } from 'services/companyService'
+import { UserRole } from 'types/user'
+import { useUser } from 'contexts/UserContext'
 
 interface SettingsSection {
   id: string
@@ -16,12 +18,14 @@ interface SettingsSection {
   description: string
   icon: React.ComponentType<{ className?: string }>
   content: React.ReactNode
+  roles: UserRole[]
 }
 
 export const Settings: React.FC = () => {
   const [activeSection, setActiveSection] = useState('profile')
   const [company, setCompany] = useState<Company | null>(null)
   const { getMyCompany } = useCompanyService()
+  const { user } = useUser()
 
   const handleUpdateCompany = () => {
     getMyCompany().then((response) => {
@@ -39,6 +43,7 @@ export const Settings: React.FC = () => {
       title: 'Meu Perfil',
       description: 'Gerencie suas informações pessoais e preferências',
       icon: UserIcon,
+      roles: [UserRole.MANAGER, UserRole.COLLABORATOR],
       content: <MyProfile />
     },
     {
@@ -46,6 +51,7 @@ export const Settings: React.FC = () => {
       title: 'Minha Empresa',
       description: 'Gerencie as configurações da sua empresa',
       icon: BuildingOfficeIcon,
+      roles: [UserRole.MANAGER],
       content: <MyCompany company={company} afterUpdate={handleUpdateCompany} />
     },
     // {
@@ -90,6 +96,7 @@ export const Settings: React.FC = () => {
       title: 'Segurança',
       description: 'Gerencie suas configurações de segurança',
       icon: ShieldCheckIcon,
+      roles: [UserRole.MANAGER, UserRole.COLLABORATOR],
       content: <Security />
     }
     // {
@@ -175,20 +182,24 @@ export const Settings: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1 border-r border-gray-200">
             <nav className="p-4 space-y-2">
-              {settingsSections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    activeSection === section.id
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <section.icon className="h-5 w-5" />
-                  <span>{section.title}</span>
-                </button>
-              ))}
+              {settingsSections
+                .filter((section) =>
+                  section.roles.includes(user?.role || UserRole.COLLABORATOR)
+                )
+                .map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      activeSection === section.id
+                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <section.icon className="h-5 w-5" />
+                    <span>{section.title}</span>
+                  </button>
+                ))}
             </nav>
           </div>
 

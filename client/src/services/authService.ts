@@ -18,6 +18,11 @@ export interface RegisterData {
   department?: string
 }
 
+export interface FirstAccessData {
+  email: string
+  password: string
+}
+
 export interface AuthResponse {
   user: {
     sub: string
@@ -49,6 +54,21 @@ export interface UserProfile {
 
 // Service principal de autenticação
 export const authService = {
+  // Primeiro acesso
+  async firstAccess(
+    firstAccessData: FirstAccessData
+  ): Promise<{ data: AuthResponse; message: string }> {
+    const response = await request<AuthResponse>('/auth/first-access', {
+      method: 'POST',
+      data: firstAccessData
+    })
+
+    console.log('response', response)
+    localStorage.setItem('access_token', response.data.access_token)
+
+    return response
+  },
+
   // Login do usuário
   async login(
     credentials: LoginCredentials

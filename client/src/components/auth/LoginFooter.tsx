@@ -1,7 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 export const LoginFooter: React.FC = () => {
+  const navigate = useNavigate()
+
+  const handleFirstAccess = () => {
+    navigate('/first-access')
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -9,6 +16,19 @@ export const LoginFooter: React.FC = () => {
       transition={{ duration: 0.5, delay: 0.3 }}
       className="text-center"
     >
+      {/* First Access Button */}
+      <div className="mb-6">
+        <button
+          onClick={handleFirstAccess}
+          className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+        >
+          Primeiro Acesso
+        </button>
+        <p className="mt-2 text-xs text-gray-500">
+          Foi convidado? Configure sua conta aqui
+        </p>
+      </div>
+
       {/* Sign up link */}
       <p className="text-sm text-gray-600 mb-4">
         Não tem uma conta?{' '}

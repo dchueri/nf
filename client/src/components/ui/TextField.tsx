@@ -20,6 +20,7 @@ interface TextFieldProps {
   inputClassName?: string
   id?: string
   label?: string
+  onEnter?: () => void
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
@@ -29,6 +30,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       value,
       onChange,
       onBlur,
+      onEnter,
       placeholder,
       disabled = false,
       autoFocus = false,
@@ -74,6 +76,15 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
     } ${inputClassName}`
 
+    const handleKeyPress = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !disabled) {
+          onEnter?.()
+        }
+      },
+      [onEnter, disabled]
+    )
+
     return (
       <div className={`space-y-1 ${className}`}>
         {label && (
@@ -100,6 +111,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             value={value}
             onChange={handleInputChange}
             onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
             className={inputClasses}
             placeholder={placeholder}
             disabled={disabled}

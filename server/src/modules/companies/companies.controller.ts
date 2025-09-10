@@ -21,17 +21,14 @@ import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { ResourceAccessGuard } from '../auth/guards/resource-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
 import { UserRole } from '../users/schemas/user.schema';
-import { TeamRole } from './schemas/team.schema';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 
 @ApiTags('companies')
 @Controller('companies')
-@UseGuards(JwtAuthGuard, RolesGuard, ResourceAccessGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiExtraModels(ResponseDto)
 @ApiBearerAuth()
 export class CompaniesController {
@@ -56,7 +53,6 @@ export class CompaniesController {
   }
 
   @Patch()
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Atualizar empresa' })
   @ApiResponse({ status: 200, description: 'Equipe atualizada' })
   @ApiResponse({ status: 404, description: 'Equipe não encontrada' })

@@ -54,6 +54,27 @@
 - Responsividade para todos os dispositivos
 - Acessibilidade seguindo WCAG guidelines
 
+### 🆕 NEW REQUEST: Colaborador First Access Onboarding
+
+**User Request:** Implementar sistema de primeiro acesso para colaboradores convidados, incluindo botão na tela de login e onboarding similar ao de empresas.
+
+**Business Context:** O sistema de primeiro acesso para colaboradores é essencial para:
+- Permitir que colaboradores convidados ativem suas contas
+- Validar convites pendentes no backend
+- Estabelecer senhas seguras para novos usuários
+- Ativar usuários automaticamente após configuração
+- Manter fluxo consistente com onboarding de empresas
+- Garantir segurança no processo de ativação
+
+**Success Criteria:**
+- Botão "Primeiro Acesso" na tela de login
+- Onboarding similar ao de empresas com validação de email
+- Validação backend de convites pendentes
+- Formulário de senha com confirmação
+- Ativação automática do usuário após configuração
+- Reutilização de componentes existentes (TextField, validação Zod)
+- Interface consistente com design system existente
+
 ## Key Challenges and Analysis
 
 ### Technical Challenges
@@ -158,6 +179,56 @@
    - Audit logging
    - Input sanitization
 
+### 🆕 Colaborador First Access Onboarding Challenges & Analysis
+
+#### Technical Challenges
+1. **Invitation Validation:**
+   - Validação backend de convites pendentes por email
+   - Verificação de status do convite (pending, expired, used)
+   - Proteção contra uso de convites inválidos
+   - Rate limiting para tentativas de validação
+   - Log de tentativas de acesso
+
+2. **Password Security:**
+   - Validação robusta de senhas (mínimo 8 caracteres, maiúscula, minúscula, número, especial)
+   - Confirmação de senha com validação em tempo real
+   - Hash seguro de senhas com bcrypt
+   - Prevenção de senhas comuns/fracas
+   - Validação de força da senha
+
+3. **User Activation:**
+   - Atualização segura do status do usuário para "active"
+   - Geração de token de autenticação após ativação
+   - Redirecionamento automático para dashboard
+   - Invalidação de convites após uso
+   - Log de ativação de usuários
+
+#### UX/UI Challenges
+1. **Consistent Design:** Manter consistência com onboarding de empresas
+2. **Clear Flow:** Fluxo intuitivo e fácil de seguir
+3. **Error Handling:** Mensagens claras para convites inválidos/expirados
+4. **Loading States:** Feedback visual durante validação e ativação
+5. **Form Validation:** Validação em tempo real sem ser intrusiva
+
+#### Security Considerations
+1. **Invitation Security:**
+   - Validação de convites apenas por email
+   - Prevenção de uso múltiplo do mesmo convite
+   - Expiração automática de convites
+   - Rate limiting para tentativas de validação
+
+2. **Password Security:**
+   - Requisitos de senha robustos
+   - Validação de força da senha
+   - Confirmação obrigatória de senha
+   - Hash seguro com salt
+
+3. **User Activation:**
+   - Ativação apenas para convites válidos
+   - Log de todas as ativações
+   - Prevenção de ativação duplicada
+   - Redirecionamento seguro após ativação
+
 ### Competitive Analysis
 - **Direct Competitors:** ERPs (Omie, ContaAzul, Nibo) - complex, expensive, overkill
 - **Indirect Competitors:** Manual processes (Google Drive, Excel, WhatsApp)
@@ -240,6 +311,50 @@
 - **Success Criteria:** Testes unitários, integração, E2E, security testing
 - **Complexity:** Medium
 - **Deliverables:** Test suite, security testing, performance testing, accessibility testing
+
+### 🆕 NEW PHASE: Colaborador First Access Onboarding (Priority: HIGH)
+
+#### Task 3.1: First Access Button Implementation
+- **Objective:** Adicionar botão "Primeiro Acesso" na tela de login
+- **Success Criteria:** Botão funcional, roteamento para onboarding, design consistente
+- **Complexity:** Low
+- **Deliverables:** First access button, routing logic, visual design
+
+#### Task 3.2: Onboarding Design & Architecture
+- **Objective:** Criar design e arquitetura do onboarding de colaboradores
+- **Success Criteria:** Design consistente com onboarding de empresas, arquitetura definida
+- **Complexity:** Medium
+- **Deliverables:** Design mockups, component architecture, flow definition
+
+#### Task 3.3: Email Validation Step
+- **Objective:** Implementar etapa de validação de email com backend
+- **Success Criteria:** Validação de convites pendentes, feedback claro, integração com API
+- **Complexity:** Medium
+- **Deliverables:** Email validation form, API integration, error handling
+
+#### Task 3.4: Password Setup Step
+- **Objective:** Implementar etapa de configuração de senha
+- **Success Criteria:** Validação robusta de senha, confirmação, feedback visual
+- **Complexity:** Medium
+- **Deliverables:** Password form, validation, confirmation, security measures
+
+#### Task 3.5: User Activation & Backend Integration
+- **Objective:** Implementar ativação de usuário e integração backend
+- **Success Criteria:** Ativação automática, atualização de status, redirecionamento
+- **Complexity:** High
+- **Deliverables:** User activation API, status update, redirect logic, logging
+
+#### Task 3.6: UX Enhancements & Validation
+- **Objective:** Melhorar UX e implementar validação robusta
+- **Success Criteria:** UX fluida, validação em tempo real, feedback visual claro
+- **Complexity:** Medium
+- **Deliverables:** Enhanced UX, real-time validation, visual feedback, animations
+
+#### Task 3.7: Testing & Quality Assurance
+- **Objective:** Testes abrangentes e garantia de qualidade
+- **Success Criteria:** Testes unitários, integração, E2E, security testing
+- **Complexity:** Medium
+- **Deliverables:** Test suite, integration testing, security testing, accessibility testing
 
 ### Phase 1: MVP Core (Weeks 1-6)
 **Goal:** Basic functionality for invoice upload, viewing, and simple reminders
@@ -511,6 +626,39 @@
    - High contrast mode support
    - Focus management
 
+### 🆕 CRITICAL PRIORITY: Colaborador First Access Onboarding
+1. **First Access Button**
+   - Botão "Primeiro Acesso" na tela de login
+   - Design consistente com interface existente
+   - Roteamento para onboarding de colaboradores
+   - Posicionamento estratégico para visibilidade
+
+2. **Email Validation System**
+   - Validação de convites pendentes por email
+   - Integração com backend para verificação
+   - Feedback claro para convites inválidos/expirados
+   - Rate limiting para tentativas de validação
+
+3. **Password Setup Form**
+   - Validação robusta de senhas (8+ caracteres, maiúscula, minúscula, número, especial)
+   - Confirmação de senha com validação em tempo real
+   - Feedback visual de força da senha
+   - Prevenção de senhas comuns/fracas
+
+4. **User Activation Flow**
+   - Ativação automática do usuário após configuração
+   - Atualização de status para "active"
+   - Geração de token de autenticação
+   - Redirecionamento para dashboard
+   - Invalidação de convites após uso
+
+5. **Consistent Design System**
+   - Reutilização de componentes existentes (TextField, Button, Modal)
+   - Validação Zod para consistência
+   - Animações e transições suaves
+   - Design responsivo para mobile/desktop
+   - Acessibilidade WCAG 2.1 AA
+
 ### High Priority (MVP)
 1. **User Authentication & Authorization**
    - Company registration and login
@@ -595,6 +743,15 @@
 - [x] Task 0.4: UX Enhancements & Accessibility
 - [x] Task 0.5: Testing & Quality Assurance
 
+### 🆕 NEW PRIORITY: Colaborador First Access Onboarding
+- [ ] Task 3.1: First Access Button Implementation
+- [ ] Task 3.2: Onboarding Design & Architecture
+- [ ] Task 3.3: Email Validation Step
+- [ ] Task 3.4: Password Setup Step
+- [ ] Task 3.5: User Activation & Backend Integration
+- [ ] Task 3.6: UX Enhancements & Validation
+- [ ] Task 3.7: Testing & Quality Assurance
+
 ### 🆕 NEW PRIORITY: Company Onboarding Implementation
 - [x] Task 1.1: Detecção e Roteamento de Onboarding
 - [x] Task 1.2: Design e Arquitetura do Onboarding
@@ -648,6 +805,82 @@
 - [ ] Phase 3: Advanced Features
 
 ## Current Status / Progress Tracking
+
+### 🆕 NEW PRIORITY: Colaborador First Access Onboarding - READY TO START
+
+**Current Status:** Planejamento completo do sistema de primeiro acesso para colaboradores. Análise detalhada de requisitos e arquitetura definida.
+
+**What was planned:**
+
+#### Task 3.1: First Access Button Implementation - PLANNED
+- **Button Design:** Botão "Primeiro Acesso" na tela de login
+- **Visual Integration:** Design consistente com interface existente
+- **Routing Logic:** Navegação para onboarding de colaboradores
+- **Positioning:** Posicionamento estratégico para máxima visibilidade
+
+#### Task 3.2: Onboarding Design & Architecture - PLANNED
+- **Consistent Design:** Manter consistência com onboarding de empresas
+- **Component Reuse:** Reutilizar TextField, Button, Modal existentes
+- **Flow Definition:** Definir fluxo de 3 etapas (email → senha → ativação)
+- **Responsive Layout:** Design responsivo para mobile/desktop
+
+#### Task 3.3: Email Validation Step - PLANNED
+- **Backend Integration:** Validação de convites pendentes por email
+- **API Endpoints:** Criar endpoints para verificação de convites
+- **Error Handling:** Feedback claro para convites inválidos/expirados
+- **Rate Limiting:** Proteção contra tentativas excessivas
+
+#### Task 3.4: Password Setup Step - PLANNED
+- **Password Validation:** Validação robusta (8+ caracteres, maiúscula, minúscula, número, especial)
+- **Confirmation:** Confirmação de senha com validação em tempo real
+- **Visual Feedback:** Indicador de força da senha
+- **Security:** Prevenção de senhas comuns/fracas
+
+#### Task 3.5: User Activation & Backend Integration - PLANNED
+- **User Activation:** Ativação automática após configuração
+- **Status Update:** Atualização de status para "active"
+- **Token Generation:** Geração de token de autenticação
+- **Redirect Logic:** Redirecionamento para dashboard
+- **Invitation Invalidation:** Invalidação de convites após uso
+
+#### Task 3.6: UX Enhancements & Validation - PLANNED
+- **Real-time Validation:** Validação em tempo real com Zod
+- **Visual Feedback:** Feedback visual claro e consistente
+- **Smooth Animations:** Animações suaves com Framer Motion
+- **Loading States:** Estados de loading durante operações
+- **Error Handling:** Tratamento robusto de erros
+
+#### Task 3.7: Testing & Quality Assurance - PLANNED
+- **Unit Testing:** Testes unitários para componentes
+- **Integration Testing:** Testes de integração com API
+- **Security Testing:** Testes de segurança e validação
+- **Accessibility Testing:** Testes de acessibilidade WCAG 2.1 AA
+
+**Technical Architecture:**
+- **Frontend:** React + TypeScript + Tailwind CSS + Framer Motion
+- **Backend:** NestJS + MongoDB + JWT Authentication
+- **Validation:** Zod schemas para validação type-safe
+- **Components:** Reutilização de TextField, Button, Modal existentes
+- **API Integration:** RESTful API com tratamento de erros
+- **Security:** Rate limiting, validação robusta, hash seguro de senhas
+
+**Success Criteria:**
+- Botão "Primeiro Acesso" funcional na tela de login
+- Onboarding similar ao de empresas com validação de email
+- Validação backend de convites pendentes
+- Formulário de senha com confirmação e validação robusta
+- Ativação automática do usuário após configuração
+- Reutilização de componentes existentes (TextField, validação Zod)
+- Interface consistente com design system existente
+- Segurança robusta seguindo melhores práticas
+
+**Ready for:** Task 3.1 (First Access Button Implementation) implementation
+
+**Next Steps:** 
+1. Implement Task 3.1: First Access Button Implementation
+2. Proceed with Task 3.2: Onboarding Design & Architecture
+3. Continue with Task 3.3: Email Validation Step
+4. Complete the colaborador onboarding implementation cycle
 
 ### 🆕 NEW PRIORITY: User Management Modals Implementation - IN PROGRESS
 

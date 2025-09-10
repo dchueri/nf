@@ -66,6 +66,13 @@ export interface UserStatsDashboard {
 
 // Service principal de usuários
 export const userService = {
+  async validateInvite(email: string): Promise<Response<User>> {
+    return request<User>(`/users/invite/validate`, {
+      method: 'POST',
+      data: { email }
+    })
+  },
+
   async bulkUpdateStatus(
     userIds: string[],
     status: 'active' | 'inactive' | 'suspended'

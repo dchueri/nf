@@ -10,6 +10,7 @@ import {
   Request,
   Query,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,9 +24,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { ResourceAccessGuard } from '../auth/guards/resource-access.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { ResourceAccess } from '../auth/decorators/resource-access.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { UserRole, UserStatus } from './schemas/user.schema';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
@@ -34,7 +34,6 @@ import { BulkUpdateUserDto } from './dto/bulk-update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard, ResourceAccessGuard)
 @ApiBearerAuth()
 @ApiExtraModels(ResponseDto)
 export class UsersController {
@@ -107,7 +106,6 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Obter usuário por ID' })
   @ApiResponse({ status: 200, description: 'Usuário encontrado' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
@@ -117,23 +115,21 @@ export class UsersController {
   }
 
   @Patch('me')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Atualizar usuário' })
   @ApiResponse({ status: 200, description: 'Usuário atualizado' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   updateMe(@Body() updateUserDto: UpdateUserDto, @Req() req) {
-    return this.usersService.update(req.user.sub, updateUserDto);
+    return this.usersService.updateWithAuth(req.user.sub, updateUserDto);
   }
 
   @Patch(':id')
-  @ResourceAccess({ allowOwnResource: true, allowCompanyResource: true })
   @ApiOperation({ summary: 'Atualizar usuário' })
   @ApiResponse({ status: 200, description: 'Usuário atualizado' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.updateWithAuth(id, updateUserDto);
   }
 
   @Delete(':id')
@@ -143,6 +139,16 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Post('invite/validate')
+  @Public()
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Validar convite do usuário' })
+  @ApiResponse({ status: 204, description: 'Convite validado' })
+  @ApiResponse({ status: 404, description: 'Convite não encontrado' })
+  validateInvite(@Body() body: { email: string }) {
+    return this.usersService.validateInvite(body.email);
   }
 
   @Post('invite')

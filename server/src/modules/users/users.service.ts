@@ -18,6 +18,15 @@ import { comparePassword, hashPassword } from '../../utils/crypt';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
+  async validateInvite(email: string): Promise<void> {
+    const user = await this.userModel
+      .findOne({ email, status: UserStatus.PENDING })
+      .exec();
+    if (!user) {
+      throw new NotFoundException('Convite não encontrado');
+    }
+  }
+
   async cancelInvitation(userId: string, companyId: string): Promise<void> {
     const user = await this.userModel
       .findOne({ _id: userId, status: UserStatus.PENDING, companyId })
@@ -147,7 +156,10 @@ export class UsersService {
     return this.userModel.find({ companyId }).exec();
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateWithAuth(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('ID de usuário inválido');
     }
@@ -190,6 +202,18 @@ export class UsersService {
     }
 
     updatedUser.password = undefined;
+    return updatedUser;
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    if (updateUserDto.password) {
+      updateUserDto.password = await hashPassword(updateUserDto.password);
+    }
+
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+
     return updatedUser;
   }
 

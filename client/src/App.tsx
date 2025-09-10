@@ -6,6 +6,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Skeleton, SkeletonCard } from './components/ui/Skeleton';
 import { LoadingSpinner } from 'components/ui/LoadingSpinner';
+import { FirstAccess } from 'pages/auth/FirstAccess';
 
 // Lazy loading das páginas
 const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -37,7 +38,14 @@ function App() {
                 </Suspense>
               </ProtectedRoute>
             } />
-            
+
+            <Route path="/first-access" element={
+              <ProtectedRoute requireAuth={false} >
+                <Suspense fallback={<PageLoading />}>
+                  <FirstAccess />
+                </Suspense>
+              </ProtectedRoute>
+            } />
             {/* Onboarding route */}
             <Route path="/onboarding" element={
               <ProtectedRoute>

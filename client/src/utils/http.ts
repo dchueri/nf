@@ -42,6 +42,7 @@ api.interceptors.response.use(
       // Token expirado ou inválido - redirecionar para login
       localStorage.removeItem('access_token')
       sessionStorage.removeItem('access_token')
+      console.log('Token expirado ou inválido - redirecionando para login')
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
