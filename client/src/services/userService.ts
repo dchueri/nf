@@ -1,13 +1,8 @@
 import { Invoice, InvoiceStatus } from 'types/invoice'
 import { User, UserRole } from '../types/user'
-import { request } from '../utils/http'
+import { request, Response } from '../utils/http'
 
 // Interfaces para as operações
-
-export interface Response<T> {
-  data: T
-  message: string
-}
 
 export interface CreateUserData {
   name: string

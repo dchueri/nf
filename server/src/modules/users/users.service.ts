@@ -165,12 +165,14 @@ export class UsersService {
       .limit(limit)
       .exec();
 
+    const totalUsers = await this.userModel.countDocuments(filters).exec();
+
     return {
       docs: users,
-      total: users.length,
+      total: totalUsers,
       page,
       limit,
-      totalPages: Math.ceil(users.length / limit),
+      totalPages: Math.ceil(totalUsers / limit),
     };
   }
 

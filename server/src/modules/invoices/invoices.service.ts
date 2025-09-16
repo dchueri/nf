@@ -10,6 +10,9 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import * as fs from 'fs';
 import { User } from '../users/schemas/user.schema';
+import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
+import dayjs from 'dayjs';
+import { PaginatedResponseDto } from 'src/common/dto/response.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -25,12 +28,11 @@ export class InvoicesService {
     companyId: string,
   ): Promise<Invoice> {
     // Criar invoice com dados do arquivo
-    console.log(userId)
     const invoiceData = {
       invoiceNumber: uploadData.invoiceNumber,
       referenceMonth: uploadData.referenceMonth
-        ? new Date(uploadData.referenceMonth)
-        : new Date(),
+        ? dayjs(uploadData.referenceMonth).set('date', 2).toDate()
+        : dayjs().set('date', 2).toDate(),
       fileName: file.originalname,
       filePath: file.path,
       mimeType: file.mimetype,
@@ -43,10 +45,12 @@ export class InvoicesService {
     return invoice.save();
   }
 
-  async findAll(companyId: string, filters?: any): Promise<Invoice[]> {
+  async findAll(
+    companyId: string,
+    filters?: GetInvoicesFiltersDto,
+  ): Promise<PaginatedResponseDto<Invoice>> {
     const query: any = { companyId };
 
-    // Aplicar filtros
     if (filters?.status) {
       query.status = filters.status;
     }
@@ -68,11 +72,23 @@ export class InvoicesService {
       ];
     }
 
-    return this.invoiceModel
+    const invoices = await this.invoiceModel
       .find(query)
-      .populate('submittedBy', 'name email')
-      .sort({ issueDate: -1 })
+      .skip((filters.page - 1) * filters.limit)
+      .limit(filters.limit)
+      .populate('userId', 'name email')
+      .sort({ referenceMonth: -1 })
       .exec();
+
+    const totalInvoices = await this.invoiceModel.countDocuments(query).exec();
+
+    return {
+      docs: invoices,
+      total: totalInvoices,
+      page: filters.page,
+      limit: filters.limit,
+      totalPages: Math.ceil(totalInvoices / filters.limit),
+    };
   }
 
   async findById(id: string, companyId: string): Promise<Invoice> {
@@ -156,7 +172,7 @@ export class InvoicesService {
     }
 
     if (status === InvoiceStatus.REJECTED) {
-      // Aqui você pode adicionar lógica para solicitar motivo da rejeição
+      // lógica para solicitar motivo da rejeição
     }
 
     const invoice = await this.invoiceModel

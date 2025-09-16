@@ -14,14 +14,13 @@ export enum InvoiceType {
 export interface Invoice {
   _id: string;
   companyId: string;
-  submittedBy: {
+  userId: {
     _id: string;
     name: string;
     email: string;
   };
   invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
+  referenceMonth: string;
   amount: number;
   description: string;
   type: InvoiceType;
@@ -47,6 +46,8 @@ export interface Invoice {
 }
 
 export interface InvoiceFilters {
+  page?: number;
+  limit?: number;
   status?: InvoiceStatus;
   type?: InvoiceType;
   startDate?: string;

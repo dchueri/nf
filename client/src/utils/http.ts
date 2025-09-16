@@ -59,12 +59,25 @@ api.interceptors.response.use(
   }
 )
 
+export interface Response<T> {
+  data: T
+  message: string
+}
+
+export interface PaginatedResponse<T> {
+  docs: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
 // Helper para fazer requisições autenticadas
 export const request = async <T>(
   endpoint: string,
   options: AxiosRequestConfig = {}
-): Promise<{ data: T; message: string }> => {
-  const response = await api.request<T, { data: T; message: string }>({
+): Promise<Response<T>> => {
+  const response = await api.request<T, Response<T>>({
     url: endpoint,
     ...options
   })

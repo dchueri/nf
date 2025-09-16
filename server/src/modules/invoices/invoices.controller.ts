@@ -34,6 +34,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { PdfFileValidator } from './validators/pdf-file.validator';
+import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
 
 @ApiTags('invoices')
 @Controller('invoices')
@@ -77,7 +78,7 @@ export class InvoicesController {
   @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
   @ApiOperation({ summary: 'Listar notas fiscais' })
   @ApiResponse({ status: 200, description: 'Lista de notas fiscais' })
-  findAll(@Request() req, @Query() filters: any) {
+  findAll(@Request() req, @Query() filters: GetInvoicesFiltersDto) {
     return this.invoicesService.findAll(req.user.companyId, filters);
   }
 
