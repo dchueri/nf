@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Bars3Icon,
@@ -17,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { user } = useUser()
   const { logout } = useAuth()
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   const handleLogout = useCallback(async () => {
     try {
@@ -26,6 +27,23 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       console.error('Erro ao fazer logout:', error)
     }
   }, [logout])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -46,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           {/* <NotificationDropdown /> */}
 
           {/* User menu */}
-          <div className="relative">
+          <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-2 p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"

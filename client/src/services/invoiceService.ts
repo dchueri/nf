@@ -1,29 +1,7 @@
 import { Invoice, InvoiceFilters, MonthlySummary } from '../types/invoice';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { request, Response } from '../utils/http';
 
 class InvoiceService {
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = localStorage.getItem('access_token');
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
-  }
 
   async getInvoices(filters?: InvoiceFilters): Promise<Invoice[]> {
     const queryParams = new URLSearchParams();
@@ -38,53 +16,19 @@ class InvoiceService {
     const queryString = queryParams.toString();
     const endpoint = `/invoices${queryString ? `?${queryString}` : ''}`;
     
-    return this.request<Invoice[]>(endpoint);
+    const response = await request<Invoice[]>(endpoint);
+    return response.data;
   }
 
   async getInvoiceById(id: string): Promise<Invoice> {
-    return this.request<Invoice>(`/invoices/${id}`);
+    const response = await request<Invoice>(`/invoices/${id}`);
+    return response.data;
   }
 
-  async createInvoice(invoiceData: Partial<Invoice>): Promise<Invoice> {
-    return this.request<Invoice>('/invoices', {
-      method: 'POST',
-      body: JSON.stringify(invoiceData),
-    });
-  }
-
-  async updateInvoice(id: string, invoiceData: Partial<Invoice>): Promise<Invoice> {
-    return this.request<Invoice>(`/invoices/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(invoiceData),
-    });
-  }
-
-  async deleteInvoice(id: string): Promise<void> {
-    return this.request<void>(`/invoices/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async updateInvoiceStatus(id: string, status: string): Promise<Invoice> {
-    return this.request<Invoice>(`/invoices/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  }
-
-  async getMonthlySummary(year: number, month: number): Promise<MonthlySummary> {
-    return this.request<MonthlySummary>(`/invoices/summary/${year}/${month}`);
-  }
-
-  async getOverdueInvoices(): Promise<Invoice[]> {
-    return this.request<Invoice[]>('/invoices/overdue');
-  }
-
-  async uploadInvoiceFile(
+  async uploadInvoice(
     file: File,
     uploadData: Partial<Invoice>
   ): Promise<Invoice> {
-    const token = localStorage.getItem('access_token');
     const formData = new FormData();
     
     formData.append('file', file);
@@ -100,35 +44,55 @@ class InvoiceService {
       }
     });
 
-    const response = await fetch(`${API_BASE_URL}/invoices/upload`, {
+    const response = await request<Invoice>('/invoices/upload', {
       method: 'POST',
+      data: formData,
       headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
+        'Content-Type': 'multipart/form-data',
       },
-      body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
+    return response.data;
   }
 
-  async downloadInvoiceFile(id: string): Promise<Blob> {
-    const token = localStorage.getItem('access_token');
-    
-    const response = await fetch(`${API_BASE_URL}/invoices/${id}/download`, {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+  async updateInvoice(id: string, invoiceData: Partial<Invoice>): Promise<Invoice> {
+    const response = await request<Invoice>(`/invoices/${id}`, {
+      method: 'PATCH',
+      data: invoiceData,
     });
+    return response.data;
+  }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  async deleteInvoice(id: string): Promise<void> {
+    await request<void>(`/invoices/${id}`, {
+      method: 'DELETE',
+    });
+  }
 
-    return response.blob();
+  async updateInvoiceStatus(id: string, status: string): Promise<Invoice> {
+    const response = await request<Invoice>(`/invoices/${id}/status`, {
+      method: 'PATCH',
+      data: { status },
+    });
+    return response.data;
+  }
+
+  async getMonthlySummary(year: number, month: number): Promise<MonthlySummary> {
+    const response = await request<MonthlySummary>(`/invoices/summary/${year}/${month}`);
+    return response.data;
+  }
+
+  async getOverdueInvoices(): Promise<Invoice[]> {
+    const response = await request<Invoice[]>('/invoices/overdue');
+    return response.data;
+  } 
+
+  async downloadInvoiceFile(id: string): Promise<Blob> {
+    const response = await request<Blob>(`/invoices/${id}/download`, {
+      method: 'GET',
+      responseType: 'blob',
+    });
+    return response.data;
   }
 }
 

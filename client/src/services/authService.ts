@@ -25,7 +25,7 @@ export interface FirstAccessData {
 
 export interface AuthResponse {
   user: {
-    sub: string
+    _id: string
     email: string
     name: string
     role: UserRole
@@ -43,7 +43,7 @@ export interface RefreshTokenResponse {
 }
 
 export interface UserProfile {
-  sub: string
+  _id: string
   email: string
   name: string
   role: UserRole
@@ -276,14 +276,13 @@ export const authUtils = {
   // Formatar dados do usuário para o contexto
   formatUserForContext: (authUser: AuthResponse['user']): User => {
     return {
-      _id: authUser.sub,
+      _id: authUser._id,
       name: authUser.name,
       email: authUser.email,
       role: authUser.role,
       phone: authUser.phone,
       status: authUser.status as UserStatus,
       companyId: authUser.companyId || '',
-      monthsWithInvoices: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }

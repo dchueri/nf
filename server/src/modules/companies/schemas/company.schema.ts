@@ -1,5 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { calculateDeadlineDate } from '../../../utils/dateUtils';
+
+// Interface for Company document with methods
+export interface CompanyDocument extends Company {
+  getDateLimit(year?: number, month?: number): Date;
+}
 
 @Schema({ timestamps: false, _id: false })
 export class ReminderScheduleSettings {
@@ -17,11 +23,11 @@ export class ReminderScheduleSettings {
 export class DeadlineSettings {
   @Prop({ default: 'fixed_day' })
   strategy: 'fixed_day' | 'start_month' | 'end_month';
-  @Prop({ default: 0 })
+  @Prop({ default: 5 })
   day: number;
-  @Prop({ default: 0 })
+  @Prop({ default: 1 })
   daysFromStart: number;
-  @Prop({ default: 0 })
+  @Prop({ default: 1 })
   daysFromEnd: number;
 }
 
@@ -32,6 +38,7 @@ export class CompanySettings {
 
   @Prop({ default: false })
   autoReminders: boolean;
+
   @Prop({ default: false })
   emailNotifications: boolean;
 
@@ -73,6 +80,25 @@ export class Company extends Document {
 }
 
 export const CompanySchema = SchemaFactory.createForClass(Company);
+
+// Add instance methods to the schema
+CompanySchema.methods.getDateLimit = function(year?: number, month?: number): Date {
+  if (!this.settings?.deadline) {
+    // Fallback to default settings if deadline settings are not configured
+    return calculateDeadlineDate('fixed_day', 5, 1, 1, year, month);
+  }
+
+  const { strategy, day, daysFromStart, daysFromEnd } = this.settings.deadline;
+  
+  return calculateDeadlineDate(
+    strategy,
+    day,
+    daysFromStart,
+    daysFromEnd,
+    year,
+    month
+  );
+};
 
 // Indexes for better query performance
 CompanySchema.index({ cnpj: 1 });

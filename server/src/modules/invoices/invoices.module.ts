@@ -7,11 +7,13 @@ import { InvoicesController } from './invoices.controller';
 import { Invoice, InvoiceSchema } from './schemas/invoice.schema';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Invoice.name, schema: InvoiceSchema }
+      { name: Invoice.name, schema: InvoiceSchema },
+      { name: User.name, schema: UserSchema }
     ]),
     MulterModule.registerAsync({
       imports: [ConfigModule],

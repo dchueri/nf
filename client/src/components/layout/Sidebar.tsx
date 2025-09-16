@@ -1,49 +1,73 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
-import { motion } from 'framer-motion';
+import React from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { useUser } from '../../contexts/UserContext'
+import { motion } from 'framer-motion'
 import {
   HomeIcon,
   DocumentTextIcon,
   ChartBarIcon,
   UsersIcon,
   CogIcon,
-  DocumentDuplicateIcon,
-} from '@heroicons/react/24/outline';
-import { cn } from '../../utils/cn';
+  DocumentDuplicateIcon
+} from '@heroicons/react/24/outline'
+import { cn } from '../../utils/cn'
 
 interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
-  isLargeScreen: boolean;
+  isOpen: boolean
+  onToggle: () => void
+  isLargeScreen: boolean
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['collaborator', 'manager'] },
-  { name: 'Minhas Notas', href: '/invoices', icon: DocumentTextIcon, roles: ['collaborator'] },
-  { name: 'Todas as Notas', href: '/invoices', icon: DocumentTextIcon, roles: ['manager'] },
+  {
+    name: 'Dashboard',
+    href: '/',
+    icon: HomeIcon,
+    roles: ['collaborator', 'manager']
+  },
+  {
+    name: 'Minhas Notas',
+    href: '/invoices',
+    icon: DocumentTextIcon,
+    roles: ['collaborator']
+  },
+  {
+    name: 'Todas as Notas',
+    href: '/invoices',
+    icon: DocumentTextIcon,
+    roles: ['manager']
+  },
   // { name: 'Relatórios', href: '/reports', icon: ChartBarIcon, roles: ['manager'] },
   { name: 'Usuários', href: '/users', icon: UsersIcon, roles: ['manager'] },
-  { name: 'Configurações', href: '/settings', icon: CogIcon, roles: ['manager'] },
-];
+  {
+    name: 'Configurações',
+    href: '/settings',
+    icon: CogIcon,
+    roles: ['manager', 'collaborator']
+  }
+]
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScreen }) => {
-  const location = useLocation();
-  const { user } = useUser();
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  onToggle,
+  isLargeScreen
+}) => {
+  const location = useLocation()
+  const { user } = useUser()
 
   const sidebarVariants = {
     open: { x: 0, opacity: 1 },
-    closed: { x: '-100%', opacity: 0 },
-  };
+    closed: { x: '-100%', opacity: 0 }
+  }
 
   const sidebarClasses = cn(
     'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-150 ease-in-out',
     {
       'translate-x-0': isOpen,
       '-translate-x-full': !isOpen,
-      'lg:relative lg:translate-x-0': isLargeScreen,
+      'lg:relative lg:translate-x-0': isLargeScreen
     }
-  );
+  )
 
   return (
     <motion.aside
@@ -56,15 +80,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <div className="flex items-center">
           <DocumentDuplicateIcon className="h-8 w-8 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">Central de Notas</span>
+          <span className="ml-2 text-xl font-bold text-gray-900">
+            Central de Notas
+          </span>
         </div>
         {!isLargeScreen && (
           <button
             onClick={onToggle}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         )}
@@ -74,9 +110,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
       <nav className="mt-6 px-3">
         <div className="space-y-1">
           {navigation
-            .filter(item => !item.roles || item.roles.includes(user?.role || 'collaborator'))
+            .filter(
+              (item) =>
+                !item.roles || item.roles.includes(user?.role || 'collaborator')
+            )
             .map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = location.pathname === item.href
               return (
                 <NavLink
                   key={item.name}
@@ -84,8 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
                   className={cn(
                     'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200',
                     {
-                      'bg-blue-50 text-blue-700 border-r-2 border-blue-700': isActive,
-                      'text-gray-600 hover:bg-gray-50 hover:text-gray-900': !isActive,
+                      'bg-blue-50 text-blue-700 border-r-2 border-blue-700':
+                        isActive,
+                      'text-gray-600 hover:bg-gray-50 hover:text-gray-900':
+                        !isActive
                     }
                   )}
                 >
@@ -94,17 +135,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isLargeScree
                       'mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-200',
                       {
                         'text-blue-700': isActive,
-                        'text-gray-400 group-hover:text-gray-500': !isActive,
+                        'text-gray-400 group-hover:text-gray-500': !isActive
                       }
                     )}
                   />
                   {item.name}
                 </NavLink>
-              );
+              )
             })}
         </div>
       </nav>
-
     </motion.aside>
-  );
-};
+  )
+}

@@ -18,15 +18,22 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { PdfFileValidator } from './validators/pdf-file.validator';
 
 @ApiTags('invoices')
 @Controller('invoices')
@@ -34,16 +41,6 @@ import { UserRole } from '../users/schemas/user.schema';
 @ApiBearerAuth()
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
-
-  @Post()
-  @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
-  @ApiOperation({ summary: 'Criar nova nota fiscal' })
-  @ApiResponse({ status: 201, description: 'Nota fiscal criada com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  create(@Body() createInvoiceDto: CreateInvoiceDto, @Request() req) {
-    return this.invoicesService.create(createInvoiceDto, req.user.sub, req.user.companyId);
-  }
-
   @Post('upload')
   @Roles(UserRole.MANAGER, UserRole.COLLABORATOR)
   @UseInterceptors(FileInterceptor('file'))
@@ -60,7 +57,7 @@ export class InvoicesController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({ fileType: '.(pdf|xml)' }),
+          new PdfFileValidator(),
         ],
       }),
     )
@@ -68,7 +65,12 @@ export class InvoicesController {
     @Body() uploadData: UploadInvoiceDto,
     @Request() req,
   ) {
-    return this.invoicesService.uploadFile(file, uploadData, req.user.sub, req.user.companyId);
+    return this.invoicesService.uploadFile(
+      file,
+      uploadData,
+      req.user._id,
+      req.user.companyId,
+    );
   }
 
   @Get()
@@ -122,7 +124,11 @@ export class InvoicesController {
     @Body() updateInvoiceDto: UpdateInvoiceDto,
     @Request() req,
   ) {
-    return this.invoicesService.update(id, updateInvoiceDto, req.user.companyId);
+    return this.invoicesService.update(
+      id,
+      updateInvoiceDto,
+      req.user.companyId,
+    );
   }
 
   @Patch(':id/status')
@@ -139,7 +145,7 @@ export class InvoicesController {
       id,
       body.status as any,
       req.user.companyId,
-      req.user.sub,
+      req.user._id,
     );
   }
 
@@ -157,9 +163,16 @@ export class InvoicesController {
   @ApiResponse({ status: 200, description: 'Arquivo baixado' })
   @ApiResponse({ status: 404, description: 'Arquivo não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
-  async downloadFile(@Param('id') id: string, @Request() req, @Res() res: Response) {
-    const fileInfo = await this.invoicesService.downloadFile(id, req.user.companyId);
-    
+  async downloadFile(
+    @Param('id') id: string,
+    @Request() req,
+    @Res() res: Response,
+  ) {
+    const fileInfo = await this.invoicesService.downloadFile(
+      id,
+      req.user.companyId,
+    );
+
     res.download(fileInfo.filePath, fileInfo.fileName, (err) => {
       if (err) {
         res.status(500).json({ message: 'Erro ao baixar arquivo' });

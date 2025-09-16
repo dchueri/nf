@@ -58,7 +58,8 @@ export const ManagerDashboard: React.FC = () => {
     setSelectedFilter('all')
     getUserStats(selectedMonth)
       .then((statsData) => {
-        setStats(statsData.data)
+        const data = statsData.data as UserStatsDashboard
+        setStats(data)
       })
       .catch((error) => {
         console.error('Erro ao carregar dados:', error)

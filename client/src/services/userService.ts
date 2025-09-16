@@ -1,9 +1,10 @@
+import { Invoice, InvoiceStatus } from 'types/invoice'
 import { User, UserRole } from '../types/user'
 import { request } from '../utils/http'
 
 // Interfaces para as operações
 
-interface Response<T> {
+export interface Response<T> {
   data: T
   message: string
 }
@@ -30,7 +31,6 @@ export interface UpdateUserData {
   newPassword?: string
   status?: 'active' | 'inactive' | 'suspended'
 }
-
 
 export interface UserFilters {
   search?: string
@@ -62,6 +62,11 @@ export interface UserStatsDashboard {
   total: number
   pending: number
   approved: number
+}
+
+export interface UserStatsDashboardCollaborator {
+  invoices: Invoice[]
+  limitDate: Date
 }
 
 // Service principal de usuários
@@ -108,8 +113,10 @@ export const userService = {
 
   async getUserStats(
     referenceMonth: string
-  ): Promise<Response<UserStatsDashboard>> {
-    return request<UserStatsDashboard>(`/users/stats/${referenceMonth}`)
+  ): Promise<Response<UserStatsDashboard | UserStatsDashboardCollaborator>> {
+    return request<UserStatsDashboard | UserStatsDashboardCollaborator>(
+      `/users/stats/${referenceMonth}`
+    )
   },
 
   // Buscar usuários para dashboard do gestor

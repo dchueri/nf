@@ -1,29 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Invoice, InvoiceStatus } from './schemas/invoice.schema';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import * as fs from 'fs';
-import * as path from 'path';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class InvoicesService {
   constructor(
     @InjectModel(Invoice.name) private invoiceModel: Model<Invoice>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
-
-  async create(createInvoiceDto: CreateInvoiceDto, userId: string, companyId: string): Promise<Invoice> {
-    const invoice = new this.invoiceModel({
-      ...createInvoiceDto,
-      submittedBy: userId,
-      companyId,
-      status: InvoiceStatus.SUBMITTED,
-    });
-
-    return invoice.save();
-  }
 
   async uploadFile(
     file: Express.Multer.File,
@@ -31,32 +24,17 @@ export class InvoicesService {
     userId: string,
     companyId: string,
   ): Promise<Invoice> {
-    // Validar arquivo
-    if (!file) {
-      throw new BadRequestException('Arquivo é obrigatório');
-    }
-
-    // Validar tipo de arquivo
-    const allowedMimeTypes = ['application/pdf', 'text/xml', 'application/xml'];
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Tipo de arquivo não suportado. Use PDF ou XML');
-    }
-
     // Criar invoice com dados do arquivo
+    console.log(userId)
     const invoiceData = {
-      invoiceNumber: uploadData.invoiceNumber || `NF-${Date.now()}`,
-      issueDate: uploadData.issueDate ? new Date(uploadData.issueDate) : new Date(),
-      dueDate: uploadData.dueDate ? new Date(uploadData.dueDate) : new Date(),
-      amount: uploadData.amount ? parseFloat(uploadData.amount) : 0,
-      description: uploadData.description || 'Nota fiscal enviada via upload',
-      type: 'invoice' as any,
-      notes: uploadData.notes,
-      tags: uploadData.tags || [],
+      invoiceNumber: uploadData.invoiceNumber,
+      referenceMonth: uploadData.referenceMonth
+        ? new Date(uploadData.referenceMonth)
+        : new Date(),
       fileName: file.originalname,
       filePath: file.path,
-      fileSize: file.size,
       mimeType: file.mimetype,
-      submittedBy: userId,
+      userId,
       companyId,
       status: InvoiceStatus.SUBMITTED,
     };
@@ -73,12 +51,12 @@ export class InvoicesService {
       query.status = filters.status;
     }
 
-    if (filters?.type) {
-      query.type = filters.type;
+    if (filters?.referenceMonth) {
+      query.referenceMonth = filters.referenceMonth;
     }
 
     if (filters?.startDate && filters?.endDate) {
-      query.issueDate = {
+      query.referenceMonth = {
         $gte: new Date(filters.startDate),
         $lte: new Date(filters.endDate),
       };
@@ -87,7 +65,6 @@ export class InvoicesService {
     if (filters?.search) {
       query.$or = [
         { invoiceNumber: { $regex: filters.search, $options: 'i' } },
-        { description: { $regex: filters.search, $options: 'i' } },
       ];
     }
 
@@ -116,17 +93,17 @@ export class InvoicesService {
     return invoice;
   }
 
-  async update(id: string, updateInvoiceDto: UpdateInvoiceDto, companyId: string): Promise<Invoice> {
+  async update(
+    id: string,
+    updateInvoiceDto: UpdateInvoiceDto,
+    companyId: string,
+  ): Promise<Invoice> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('ID de invoice inválido');
     }
 
     const invoice = await this.invoiceModel
-      .findOneAndUpdate(
-        { _id: id, companyId },
-        updateInvoiceDto,
-        { new: true }
-      )
+      .findOneAndUpdate({ _id: id, companyId }, updateInvoiceDto, { new: true })
       .exec();
 
     if (!invoice) {
@@ -158,14 +135,22 @@ export class InvoicesService {
     await this.invoiceModel.findByIdAndDelete(id).exec();
   }
 
-  async updateStatus(id: string, status: InvoiceStatus, companyId: string, reviewedBy?: string): Promise<Invoice> {
+  async updateStatus(
+    id: string,
+    status: InvoiceStatus,
+    companyId: string,
+    reviewedBy?: string,
+  ): Promise<Invoice> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('ID de invoice inválido');
     }
 
     const updateData: any = { status };
-    
-    if (status === InvoiceStatus.APPROVED || status === InvoiceStatus.REJECTED) {
+
+    if (
+      status === InvoiceStatus.APPROVED ||
+      status === InvoiceStatus.REJECTED
+    ) {
       updateData.reviewedBy = reviewedBy;
       updateData.reviewedAt = new Date();
     }
@@ -175,11 +160,7 @@ export class InvoicesService {
     }
 
     const invoice = await this.invoiceModel
-      .findOneAndUpdate(
-        { _id: id, companyId },
-        updateData,
-        { new: true }
-      )
+      .findOneAndUpdate({ _id: id, companyId }, updateData, { new: true })
       .exec();
 
     if (!invoice) {
@@ -189,22 +170,32 @@ export class InvoicesService {
     return invoice;
   }
 
-  async getMonthlySummary(companyId: string, year: number, month: number): Promise<any> {
+  async getMonthlySummary(
+    companyId: string,
+    year: number,
+    month: number,
+  ): Promise<any> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
     const invoices = await this.invoiceModel
       .find({
         companyId,
-        issueDate: { $gte: startDate, $lte: endDate }
+        issueDate: { $gte: startDate, $lte: endDate },
       })
       .exec();
 
-    const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+    const totalAmount = invoices.reduce(
+      (sum, invoice) => sum + invoice.amount,
+      0,
+    );
     const statusCounts = {
-      submitted: invoices.filter(i => i.status === InvoiceStatus.SUBMITTED).length,
-      approved: invoices.filter(i => i.status === InvoiceStatus.APPROVED).length,
-      rejected: invoices.filter(i => i.status === InvoiceStatus.REJECTED).length,
+      submitted: invoices.filter((i) => i.status === InvoiceStatus.SUBMITTED)
+        .length,
+      approved: invoices.filter((i) => i.status === InvoiceStatus.APPROVED)
+        .length,
+      rejected: invoices.filter((i) => i.status === InvoiceStatus.REJECTED)
+        .length,
     };
 
     return {
@@ -212,18 +203,20 @@ export class InvoicesService {
       totalInvoices: invoices.length,
       totalAmount,
       statusCounts,
-      invoices: invoices.map(invoice => ({
+      invoices: invoices.map((invoice) => ({
         id: invoice._id,
         invoiceNumber: invoice.invoiceNumber,
         amount: invoice.amount,
         status: invoice.status,
-        issueDate: invoice.issueDate,
-        dueDate: invoice.dueDate,
+        referenceMonth: invoice.referenceMonth,
       })),
     };
   }
 
-  async downloadFile(id: string, companyId: string): Promise<{ filePath: string; fileName: string }> {
+  async downloadFile(
+    id: string,
+    companyId: string,
+  ): Promise<{ filePath: string; fileName: string }> {
     const invoice = await this.findById(id, companyId);
 
     if (!invoice.filePath || !fs.existsSync(invoice.filePath)) {
@@ -238,12 +231,12 @@ export class InvoicesService {
 
   async getOverdueInvoices(companyId: string): Promise<Invoice[]> {
     const today = new Date();
-    
+
     return this.invoiceModel
       .find({
         companyId,
         dueDate: { $lt: today },
-        status: { $in: [InvoiceStatus.SUBMITTED] }
+        status: { $in: [InvoiceStatus.SUBMITTED] },
       })
       .populate('submittedBy', 'name email')
       .sort({ dueDate: 1 })

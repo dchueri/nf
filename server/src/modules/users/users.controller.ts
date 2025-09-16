@@ -85,17 +85,21 @@ export class UsersController {
   }
 
   @Get('stats/:referenceMonth')
-  @Roles(UserRole.MANAGER)
   @ApiOperation({
     summary: 'Obter estatísticas dos usuários por mês de referência',
   })
   @ApiResponse({ status: 200, description: 'Estatísticas dos usuários' })
   @ResponseMessage('Estatísticas dos usuários obtidas com sucesso')
   getStats(@Request() req, @Param('referenceMonth') referenceMonth: string) {
-    return this.usersService.getUsersStatsByMonth(
-      req.user.companyId,
-      referenceMonth,
-    );
+    const user = req.user;
+    if (user.role === UserRole.MANAGER) {
+      return this.usersService.getUsersStatsByMonth(
+        user.companyId,
+        referenceMonth,
+      );
+    } else {
+      return this.usersService.getOneUserStatsByMonth(user, referenceMonth);
+    }
   }
 
   @Get('profile')
@@ -120,7 +124,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   updateMe(@Body() updateUserDto: UpdateUserDto, @Req() req) {
-    return this.usersService.updateWithAuth(req.user.sub, updateUserDto);
+    return this.usersService.updateWithAuth(req.user._id, updateUserDto);
   }
 
   @Patch(':id')

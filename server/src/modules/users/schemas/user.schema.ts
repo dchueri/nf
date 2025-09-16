@@ -37,26 +37,6 @@ export class User extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
   companyId?: Types.ObjectId;
 
-  @Prop({
-    type: [
-      {
-        month: String,
-        submittedAt: Date,
-        invoices: Number,
-        status: { type: String, enum: InvoiceStatus },
-      },
-    ],
-    default: [],
-  })
-  monthsWithInvoices: [
-    {
-      month: string;
-      submittedAt: Date;
-      invoices: number;
-      status: InvoiceStatus;
-    },
-  ];
-
   @Prop()
   phone?: string;
 

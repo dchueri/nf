@@ -1,4 +1,4 @@
-import { InvoiceStatus } from './invoice'
+import { Invoice, InvoiceStatus } from './invoice'
 
 export enum UserRole {
   COLLABORATOR = 'collaborator',
@@ -18,13 +18,6 @@ export interface User {
   email: string
   role: UserRole
   status: UserStatus
-  monthsWithInvoices: {
-    month: string
-    invoices: number
-    status: InvoiceStatus
-    submittedAt: string
-    amount?: number
-  }[]
   companyId: string
   phone?: string
   avatar?: string

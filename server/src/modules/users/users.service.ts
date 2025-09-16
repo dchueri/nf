@@ -11,12 +11,17 @@ import { User, UserRole, UserStatus } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginatedResponseDto } from 'src/common/dto/response.dto';
-import { InvoiceStatus } from '../invoices/schemas/invoice.schema';
+import { Invoice, InvoiceStatus } from '../invoices/schemas/invoice.schema';
 import { comparePassword, hashPassword } from '../../utils/crypt';
+import { Company, CompanyDocument } from '../companies/schemas/company.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
+    @InjectModel(Invoice.name) private invoiceModel: Model<Invoice>,
+  ) {}
 
   async validateInvite(email: string): Promise<void> {
     const user = await this.userModel
@@ -40,6 +45,29 @@ export class UsersService {
     await this.userModel.deleteOne({ _id: userId }).exec();
   }
 
+  async getOneUserStatsByMonth(
+    user: User,
+    referenceMonth: string,
+  ): Promise<{
+    invoices: Invoice[];
+    limitDate: Date;
+  }> {
+    const company = await this.companyModel.findById(user.companyId);
+    const [year, month] = referenceMonth.split('-').map(Number);
+
+    const limitDate = company.getDateLimit(year, month);
+
+    const monthInvoices = await this.invoiceModel.find({
+      userId: user._id,
+      referenceMonth: { $eq: dayjs(referenceMonth).toDate() },
+    }).sort({ createdAt: -1 });
+
+    return {
+      invoices: monthInvoices,
+      limitDate,
+    };
+  }
+
   async getUsersStatsByMonth(
     companyId: string,
     referenceMonth: string,
@@ -53,16 +81,22 @@ export class UsersService {
       approved: 0,
       pending: 0,
     };
-    for (const user of companyUsers) {
-      const monthUser = user.monthsWithInvoices.find(
-        (month) => month.month === referenceMonth,
-      );
-      if (monthUser) {
-        stats[monthUser.status]++;
+    const monthInvoices = await this.invoiceModel.find({
+      companyId,
+      referenceMonth: { $eq: new Date(referenceMonth) },
+    });
+    const approvedUsers = new Set<string>();
+    const pendingUsers = new Set<string>();
+    monthInvoices.forEach((invoice) => {
+      if (invoice.status === InvoiceStatus.APPROVED) {
+        approvedUsers.add(invoice.userId.toString());
       } else {
-        stats.pending++;
+        pendingUsers.add(invoice.userId.toString());
       }
-    }
+    });
+
+    stats.approved = approvedUsers.size;
+    stats.pending = pendingUsers.size;
     return stats;
   }
 

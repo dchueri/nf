@@ -5,14 +5,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Company } from './schemas/company.schema';
+import { Company, CompanyDocument } from './schemas/company.schema';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class CompaniesService {
   constructor(
-    @InjectModel(Company.name) private companyModel: Model<Company>,
+    @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
@@ -41,7 +41,7 @@ export class CompaniesService {
     return this.companyModel.find().exec();
   }
 
-  async findOneById(id: string): Promise<Company> {
+  async findOneById(id: string): Promise<CompanyDocument> {
     const company = await this.companyModel.findById(id);
 
     if (!company) {
@@ -58,5 +58,21 @@ export class CompaniesService {
     return this.companyModel.findByIdAndUpdate(id, updateCompanyDto, {
       new: true,
     });
+  }
+
+  /**
+   * Gets the deadline date for a company based on its settings
+   * @param companyId - The company ID
+   * @param year - Optional year (defaults to current year)
+   * @param month - Optional month (0-11, defaults to current month)
+   * @returns The calculated deadline date
+   */
+  async getCompanyDeadline(
+    companyId: string,
+    year?: number,
+    month?: number,
+  ): Promise<Date> {
+    const company = await this.findOneById(companyId);
+    return company.getDateLimit(year, month);
   }
 }

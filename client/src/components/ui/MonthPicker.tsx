@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import {
   CalendarIcon,
   ChevronLeftIcon,
@@ -25,22 +26,30 @@ export const MonthPicker: React.FC<MonthPickerProps> = ({
     const [year] = selectedMonth.split('-')
     return parseInt(year)
   })
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const datePickerRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Fechar datepicker quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        datePickerRef.current &&
-        !datePickerRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node
+      
+      // Verificar se o clique foi fora do trigger e do dropdown
+      const isOutsideTrigger = datePickerRef.current && !datePickerRef.current.contains(target)
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target)
+      
+      if (isOutsideTrigger && isOutsideDropdown) {
         setIsDatePickerOpen(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    if (isDatePickerOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [isDatePickerOpen])
 
   // Atualizar ano da visualização quando selectedMonth mudar
   useEffect(() => {
@@ -49,13 +58,24 @@ export const MonthPicker: React.FC<MonthPickerProps> = ({
   }, [selectedMonth])
 
   const openDatePicker = () => {
+    if (datePickerRef.current) {
+      const rect = datePickerRef.current.getBoundingClientRect()
+      const dropdownHeight = 256 // Altura aproximada do dropdown (w-64 = 16rem = 256px)
+      setDropdownPosition({
+        top: rect.top + window.scrollY - dropdownHeight - 4, // Posiciona acima do campo
+        left: rect.left + window.scrollX
+      })
+    }
     setIsDatePickerOpen(true)
   }
 
   const selectMonth = (month: number, year: number) => {
     const newMonthString = `${year}-${String(month).padStart(2, '0')}`
     onMonthChange(newMonthString)
-    setIsDatePickerOpen(false)
+    // Pequeno delay para garantir que o onMonthChange seja executado antes de fechar
+    setTimeout(() => {
+      setIsDatePickerOpen(false)
+    }, 100)
   }
 
   const getCurrentMonth = () => {
@@ -99,13 +119,20 @@ export const MonthPicker: React.FC<MonthPickerProps> = ({
       </button>
 
       {/* Datepicker Dropdown */}
-      {isDatePickerOpen && (
+      {isDatePickerOpen && createPortal(
         <motion.div
+          ref={dropdownRef}
           initial={{ opacity: 0, y: -10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+          className="fixed w-64 bg-white border border-gray-200 rounded-lg shadow-xl"
+          style={{ 
+            zIndex: 9999,
+            top: dropdownPosition.top,
+            left: dropdownPosition.left
+          }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header com navegação de ano */}
           <div className="flex items-center justify-between p-3 border-b border-gray-200">
@@ -183,7 +210,8 @@ export const MonthPicker: React.FC<MonthPickerProps> = ({
               Ir para Mês Atual
             </button>
           </div>
-        </motion.div>
+        </motion.div>,
+        document.body
       )}
     </div>
   )
