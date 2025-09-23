@@ -152,7 +152,7 @@ export class InvoicesController {
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })
   updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: string, rejectionReason: string },
+    @Body() body: { status: string; rejectionReason: string },
     @Request() req,
   ) {
     return this.invoicesService.updateStatus(
@@ -193,6 +193,53 @@ export class InvoicesController {
       if (err) {
         res.status(500).json({ message: 'Erro ao baixar arquivo' });
       }
+    });
+  }
+
+  @Post('compile')
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Compilar todas as notas fiscais de um mês em ZIP' })
+  @ApiResponse({ status: 200, description: 'ZIP compilado com sucesso' })
+  @ApiResponse({ status: 404, description: 'Nenhuma nota fiscal encontrada' })
+  @ApiResponse({ status: 403, description: 'Acesso negado' })
+  async compileInvoicesByMonth(
+    @Body() body: { referenceMonth: string },
+    @Request() req,
+    @Res() res: Response,
+  ) {
+    const { referenceMonth } = body;
+
+    if (!referenceMonth) {
+      return res
+        .status(400)
+        .json({ message: 'Mês de referência é obrigatório' });
+    }
+
+    const result = await this.invoicesService.compileInvoicesByMonth(
+      referenceMonth,
+      req.user._id,
+      req.user.companyId,
+    );
+
+    // Configurar headers para download
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${result.fileName}"`,
+    );
+
+    // Enviar arquivo ZIP
+    const fileStream = require('fs').createReadStream(result.zipPath);
+    fileStream.pipe(res);
+
+    // Limpar arquivo temporário após envio
+    fileStream.on('end', () => {
+      require('fs').unlinkSync(result.zipPath);
+    });
+
+    fileStream.on('error', (err) => {
+      console.error('Erro ao enviar arquivo ZIP:', err);
+      res.status(500).json({ message: 'Erro ao enviar arquivo ZIP' });
     });
   }
 }

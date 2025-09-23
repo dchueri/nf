@@ -87,7 +87,6 @@ export class UsersService {
       companyId,
       referenceMonth: { $eq: new Date(referenceMonth) },
     });
-    console.log('monthInvoices', monthInvoices);
     const approvedUsers = new Set<string>();
     const pendingUsers = new Set<string>();
     monthInvoices.forEach((invoice) => {
@@ -139,15 +138,6 @@ export class UsersService {
     page: number,
     limit: number,
   ): Promise<(FlattenMaps<User> & { invoice: FlattenMaps<Invoice> })[]> {
-    console.log(
-      companyId,
-      referenceMonth,
-      userInvoiceStatus,
-      search,
-      page,
-      limit,
-    );
-
     const filters = this.usersThatMustSendInvoicesFilterByReferenceMonth(referenceMonth);
     const companyUsers = await this.userModel
       .find({

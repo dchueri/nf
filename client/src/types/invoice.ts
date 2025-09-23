@@ -3,6 +3,8 @@ export enum InvoiceStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   IGNORED = 'ignored',
+  PENDING = 'pending',
+  PAID = 'paid',
 }
 
 export enum InvoiceType {

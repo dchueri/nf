@@ -57,7 +57,6 @@ const getStatusColor = (status: string) => {
 }
 
 const getStatusLabel = (status: string) => {
-  console.log('status', status)
   switch (status) {
     case 'approved':
     case 'ignored':
@@ -116,8 +115,6 @@ export const UserTable: React.FC<UserTableProps> = ({
   className = '',
   loading
 }) => {
-  console.log('users', users)
-
   const handleUserAction = (user: User & { invoice: Invoice }, action: string, fileName?: string) => {
     if (onUserAction) {
       onUserAction(user, action, fileName)
@@ -135,7 +132,6 @@ export const UserTable: React.FC<UserTableProps> = ({
   }
 
   const getDelayStatus = (status: InvoiceStatus) => {
-    console.log('status', status)
     if (
       status === InvoiceStatus.SUBMITTED ||
       status === InvoiceStatus.APPROVED ||

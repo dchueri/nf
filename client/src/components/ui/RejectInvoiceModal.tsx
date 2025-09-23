@@ -151,7 +151,6 @@ export const useRejectInvoiceModal = () => {
     userName?: string
     onReject: (reason?: string) => void
   } | null>(null)
-  console.log('config2', config)
 
   const openModal = useCallback(
     (userName: string, onReject: (reason?: string) => void) => {

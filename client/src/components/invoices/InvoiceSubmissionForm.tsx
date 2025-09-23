@@ -93,7 +93,6 @@ export const InvoiceSubmissionForm: React.FC<InvoiceSubmissionFormProps> = ({
 
   const handleMonthChange = useCallback(
     (month: string) => {
-      console.log('month', month)
       setFormData((prev) => ({ ...prev, month }))
       validateField('month', month)
       setSubmitError(null)

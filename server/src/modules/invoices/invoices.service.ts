@@ -9,9 +9,11 @@ import { Invoice, InvoiceStatus } from './schemas/invoice.schema';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as archiver from 'archiver';
 import { User, UserRole } from '../users/schemas/user.schema';
 import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { PaginatedResponseDto } from 'src/common/dto/response.dto';
 import { CreateIgnoredInvoiceDto } from './dto/create-ignored-invoice.dto';
 
@@ -120,7 +122,6 @@ export class InvoicesService {
     if (userId) {
       query.userId = userId;
     }
-    console.log('query', query);
     const invoice = await this.invoiceModel
       .findOne(query)
       .populate('userId', 'name email')
@@ -300,5 +301,87 @@ export class InvoicesService {
       .populate('submittedBy', 'name email')
       .sort({ dueDate: 1 })
       .exec();
+  }
+
+  async compileInvoicesByMonth(
+    referenceMonth: string,
+    userId: string,
+    companyId: string,
+  ): Promise<{ zipPath: string; fileName: string; count: number }> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verificar se o usuário tem permissão para compilar notas fiscais
+    if (user.role !== UserRole.MANAGER) {
+      throw new ForbiddenException(
+        'Apenas gestores podem compilar notas fiscais',
+      );
+    }
+
+    const query: any = {
+      companyId,
+      referenceMonth: {
+        $lte: dayjs(referenceMonth).endOf('month').toDate(),
+        $gte: dayjs(referenceMonth).startOf('month').toDate(),
+      },
+    };
+    if (user.role === UserRole.MANAGER) {
+      query.status = InvoiceStatus.APPROVED;
+    }
+    const invoices = await this.invoiceModel
+      .find(query)
+      .populate('userId', 'name email')
+      .exec();
+
+    if (invoices.length === 0) {
+      throw new NotFoundException(
+        'Nenhuma nota fiscal encontrada para o mês selecionado',
+      );
+    }
+
+    // Criar diretório temporário para o ZIP
+    const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    // Nome do arquivo ZIP
+    const zipFileName = `notas-fiscais-${referenceMonth}-${Date.now()}.zip`;
+    const zipPath = path.join(tempDir, zipFileName);
+
+    // Criar arquivo ZIP
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver('zip', {
+      zlib: { level: 9 }, // Máxima compressão
+    });
+
+    return new Promise((resolve, reject) => {
+      output.on('close', () => {
+        resolve({
+          zipPath,
+          fileName: zipFileName,
+          count: invoices.length,
+        });
+      });
+
+      archive.on('error', (err) => {
+        reject(err);
+      });
+
+      archive.pipe(output);
+
+      // Adicionar cada nota fiscal ao ZIP
+      invoices.forEach((invoice) => {
+        if (invoice.filePath && fs.existsSync(invoice.filePath)) {
+          const user = invoice.userId as any;
+          const fileName = `${user?.name || 'Usuario'}-${invoice.invoiceNumber}-${invoice.fileName}`;
+          archive.file(invoice.filePath, { name: fileName });
+        }
+      });
+
+      archive.finalize();
+    });
   }
 }

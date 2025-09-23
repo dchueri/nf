@@ -63,7 +63,6 @@ export const authService = {
       data: firstAccessData
     })
 
-    console.log('response', response)
     localStorage.setItem('access_token', response.data.access_token)
 
     return response

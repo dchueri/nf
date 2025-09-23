@@ -43,11 +43,6 @@ export const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
       if (process.env.NODE_ENV === 'development') {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Creating invitation:', { 
-          ...formData, 
-          companyId,
-          expiresAt: new Date(Date.now() + formData.expiresInDays * 24 * 60 * 60 * 1000).toISOString()
-        });
         onInvitationCreated();
         onClose();
         resetForm();

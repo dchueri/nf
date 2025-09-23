@@ -1,5 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import { BellIcon, ChartBarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import {
+  BellIcon,
+  ChartBarIcon,
+  DocumentTextIcon
+} from '@heroicons/react/24/outline'
 import { Button } from '../../ui/Button'
 import { useToastHelpers } from '../../ui/Toast'
 import {
@@ -43,8 +47,12 @@ export const ManagerDashboard: React.FC = () => {
   })
   const toast = useToastHelpers()
   const { getUserStats, getUsersWithInvoiceStatus } = useUserService()
-  const { createIgnoredInvoice, downloadInvoiceFile, updateInvoiceStatus } =
-    useInvoiceService()
+  const {
+    createIgnoredInvoice,
+    downloadInvoiceFile,
+    updateInvoiceStatus,
+    compileInvoicesByMonth
+  } = useInvoiceService()
   const {
     isOpen: isRejectModalOpen,
     openModal: openRejectModal,
@@ -184,24 +192,55 @@ export const ManagerDashboard: React.FC = () => {
     }
   }, [toast])
 
-  const handleGenerateReport = useCallback(async () => {
+  const handleCompileInvoices = useCallback(async () => {
     setLoading(true)
     try {
-      // Simular API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const invoiceCount = stats.total
+
+      if (invoiceCount === 0) {
+        toast.error(
+          'Nenhuma nota fiscal encontrada',
+          'Não há notas fiscais para compilar no mês selecionado.'
+        )
+        return
+      }
+
+      // Confirmar compilação se houver muitas notas fiscais
+      if (invoiceCount > 50) {
+        const confirmed = window.confirm(
+          `Você está prestes a compilar ${invoiceCount} notas fiscais. Isso pode levar alguns minutos. Deseja continuar?`
+        )
+        if (!confirmed) {
+          return
+        }
+      }
+
+      await compileInvoicesByMonth(selectedMonth)
+
       toast.success(
-        'Relatório gerado!',
-        'O arquivo foi baixado automaticamente.'
+        'Notas fiscais compiladas!',
+        `O arquivo ZIP foi salvo automaticamente.`
       )
-    } catch (error) {
-      toast.error(
-        'Erro ao gerar relatório',
-        'Tente novamente em alguns instantes.'
-      )
+    } catch (error: any) {
+      console.error('Erro ao compilar notas fiscais:', error)
+
+      // Tratamento específico de erros
+      let errorMessage = 'Tente novamente em alguns instantes.'
+      if (error.response?.data?.message) {
+        errorMessage = error.response?.data?.message
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Nenhuma nota fiscal encontrada para o mês selecionado.'
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Você não tem permissão para compilar notas fiscais.'
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.'
+      }
+
+      toast.error('Erro ao compilar notas fiscais', errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [compileInvoicesByMonth, selectedMonth, toast, users])
 
   return (
     <div className="space-y-6">
@@ -213,18 +252,16 @@ export const ManagerDashboard: React.FC = () => {
             Visão geral do status de envio de notas fiscais
           </p>
         </div>
-        <div className="flex space-x-3">
-          <Button onClick={handleGenerateReport} disabled={loading}>
-            {loading ? (
-              <ButtonLoader text="Compilando Notas Fiscais..." />
-            ) : (
-              <>
-                <DocumentTextIcon className="h-4 w-4 mr-2" />
-                Compilar Notas Fiscais
-              </>
-            )}
-          </Button>
-        </div>
+        <Button onClick={handleCompileInvoices} disabled={loading}>
+          {loading ? (
+            <ButtonLoader text="Gerando arquivo..." />
+          ) : (
+            <>
+              <DocumentTextIcon className="h-4 w-4 mr-2" />
+              Gerar ZIP
+            </>
+          )}
+        </Button>
       </div>
 
       <DateSelector

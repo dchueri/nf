@@ -122,6 +122,49 @@ export const invoiceService = {
     })
     
     return response.data
+  },
+
+  async compileInvoicesByMonth(referenceMonth: string): Promise<void> {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/invoices/compile`,
+      { referenceMonth },
+      {
+        responseType: 'blob',
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    
+    // Criar blob e fazer download automático
+    const blob = new Blob([response.data], { type: 'application/zip' })
+    const url = window.URL.createObjectURL(blob)
+    
+    // Extrair nome do arquivo do header Content-Disposition
+    const contentDisposition = response.headers['content-disposition']
+    let fileName = `notas-fiscais-${referenceMonth}.zip`
+    
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(/filename="(.+)"/)
+      if (fileNameMatch) {
+        fileName = fileNameMatch[1]
+      }
+    }
+    
+    // Criar link temporário para download
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Limpar URL
+    window.URL.revokeObjectURL(url)
   }
 }
 

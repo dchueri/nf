@@ -24,7 +24,6 @@ export const useOnboarding = () => {
     }
 
     // Se o usuário é MANAGER e não tem companyId, precisa fazer onboarding
-    console.log('user', user)
     const needsOnboarding = user.role === UserRole.MANAGER && !user.companyId
     
     setIsOnboardingRequired(needsOnboarding)
@@ -61,7 +60,6 @@ export const useOnboarding = () => {
       
       // Criar a empresa
       const response = await companyService.createCompany(completeData)
-      console.log(response)
       
       // Atualizar o usuário com o companyId
       const updatedUser = {

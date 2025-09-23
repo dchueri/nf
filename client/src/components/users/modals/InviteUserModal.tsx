@@ -38,7 +38,6 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   const [error, setError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
 
-  console.log('isSuccess', isSuccess)
   const onInviteSent = useCallback((email: string) => {
     userService.inviteUser(email)
   }, [])
@@ -102,7 +101,6 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   )
 
   const handleClose = useCallback(() => {
-      console.log('handleClose', isSubmitting)
       setFormData({ email: '' })
       setErrors({})
       setError(null)

@@ -25,7 +25,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const validateAuth = async () => {
       if (!user && requireAuth) {
         const isAuthenticated = await checkAuth()
-        console.log('isAuthenticated', isAuthenticated)
         if (!isAuthenticated) {
           setIsCheckingAuth(false)
           return

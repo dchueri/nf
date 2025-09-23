@@ -113,7 +113,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     operation: BulkUserOperation['operation'],
     usersSet?: Set<string>
   ) => {
-    console.log('handleBulkOperation', operation, selectedUsers.size)
     const usersSetToUse = usersSet || selectedUsers
     if (usersSetToUse.size === 0) return
 
@@ -155,12 +154,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         operation,
         users: Array.from(usersSetToUse)
       }
-      console.log('bulkOp', bulkOp)
 
       if (process.env.NODE_ENV === 'development') {
         // Simulate bulk operation
         await new Promise((resolve) => setTimeout(resolve, 2000))
-        console.log('Bulk operation:', bulkOp)
 
         // Update local state
         if (operation === 'remove') {

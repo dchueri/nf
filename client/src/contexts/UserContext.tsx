@@ -19,7 +19,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         const isAuthenticated = await authService.isAuthenticated();
         if (isAuthenticated) {
           const profile = await authService.getProfile();
-          console.log('profile', profile)
           const user = authUtils.formatUserForContext(profile.data);
           setUser(user);
         }
