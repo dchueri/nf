@@ -87,18 +87,25 @@ export class UsersService {
       companyId,
       referenceMonth: { $eq: new Date(referenceMonth) },
     });
+    console.log('monthInvoices', monthInvoices);
     const approvedUsers = new Set<string>();
     const pendingUsers = new Set<string>();
     monthInvoices.forEach((invoice) => {
-      if (invoice.status === InvoiceStatus.APPROVED) {
+      if (invoice.status === InvoiceStatus.APPROVED || invoice.status === InvoiceStatus.IGNORED) {
         approvedUsers.add(invoice.userId.toString());
       } else {
         pendingUsers.add(invoice.userId.toString());
       }
     });
 
+    const notSubmittedUsers = companyUsers.filter(
+      (user) => !monthInvoices.some(
+        (invoice) => invoice.userId.toString() === user._id.toString(),
+      ),
+    );
+
     stats.approved = approvedUsers.size;
-    stats.pending = pendingUsers.size;
+    stats.pending = pendingUsers.size + notSubmittedUsers.length;
     return stats;
   }
 
@@ -141,11 +148,11 @@ export class UsersService {
       limit,
     );
 
+    const filters = this.usersThatMustSendInvoicesFilterByReferenceMonth(referenceMonth);
     const companyUsers = await this.userModel
       .find({
         companyId,
-        status: UserStatus.ACTIVE,
-        role: UserRole.COLLABORATOR,
+        ...filters,
       })
       .lean();
 
@@ -171,17 +178,19 @@ export class UsersService {
       .sort({ referenceMonth: -1 })
       .lean();
 
-    const usersWithoutInvoice = companyUsers.filter(
-      (user) =>
-        !invoicesOfMonth.some(
-          (invoice) => invoice.userId.toString() === user._id.toString(),
-        ),
-    ).map((user) => {
-      return {
-        ...user,
-        invoice: null,
-      };
-    });
+    const usersWithoutInvoice = companyUsers
+      .filter(
+        (user) =>
+          !invoicesOfMonth.some(
+            (invoice) => invoice.userId.toString() === user._id.toString(),
+          ),
+      )
+      .map((user) => {
+        return {
+          ...user,
+          invoice: null,
+        };
+      });
     if (userInvoiceStatus === 'not_submitted') {
       return usersWithoutInvoice;
     }
@@ -443,56 +452,15 @@ export class UsersService {
 
   private usersThatMustSendInvoicesFilterByReferenceMonth(
     referenceMonth: string,
-    status?: string,
   ): FilterQuery<User> {
-    const filters: FilterQuery<User> = {
+    return {
       createdAt: {
         $lte: dayjs(referenceMonth).endOf('month').toDate(),
       },
       status: UserStatus.ACTIVE,
       role: UserRole.COLLABORATOR,
+      deletedAt: { $exists: false },
     };
-
-    if (status) {
-      if (status === 'pending') {
-        filters.monthsWithInvoices = {
-          $elemMatch: {
-            month: referenceMonth,
-            status: InvoiceStatus.SUBMITTED,
-          },
-        };
-      }
-
-      if (status === 'not_submitted') {
-        filters.monthsWithInvoices = {
-          $or: [
-            {
-              $not: {
-                $elemMatch: {
-                  month: referenceMonth,
-                },
-              },
-            },
-            {
-              $elemMatch: {
-                month: referenceMonth,
-                status: InvoiceStatus.REJECTED,
-              },
-            },
-          ],
-        };
-      }
-
-      if (status === 'approved') {
-        filters.monthsWithInvoices = {
-          $elemMatch: {
-            month: referenceMonth,
-            status: { $in: [InvoiceStatus.APPROVED, InvoiceStatus.IGNORED] },
-          },
-        };
-      }
-    }
-    return filters;
   }
 
   private getInvoicesByUserId(userId: string, invoices: Invoice[]): Invoice[] {

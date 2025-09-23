@@ -35,6 +35,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { PdfFileValidator } from './validators/pdf-file.validator';
 import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
+import { CreateIgnoredInvoiceDto } from './dto/create-ignored-invoice.dto';
 
 @ApiTags('invoices')
 @Controller('invoices')
@@ -130,6 +131,15 @@ export class InvoicesController {
       updateInvoiceDto,
       req.user.companyId,
     );
+  }
+
+  @Post('ignored')
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Criar nota fiscal ignorada' })
+  @ApiResponse({ status: 201, description: 'Nota fiscal ignorada criada' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos' })
+  createIgnoredInvoice(@Body() createIgnoredInvoiceDto: CreateIgnoredInvoiceDto, @Request() req) {
+    return this.invoicesService.createIgnoredInvoice(createIgnoredInvoiceDto);
   }
 
   @Patch(':id/status')

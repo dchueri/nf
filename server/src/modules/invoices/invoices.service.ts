@@ -13,6 +13,7 @@ import { User } from '../users/schemas/user.schema';
 import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
 import dayjs from 'dayjs';
 import { PaginatedResponseDto } from 'src/common/dto/response.dto';
+import { CreateIgnoredInvoiceDto } from './dto/create-ignored-invoice.dto';
 
 @Injectable()
 export class InvoicesService {
@@ -20,6 +21,25 @@ export class InvoicesService {
     @InjectModel(Invoice.name) private invoiceModel: Model<Invoice>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
+
+  async createIgnoredInvoice({
+    userId,
+    referenceMonth,
+  }: CreateIgnoredInvoiceDto): Promise<Invoice> {
+    const user = await this.userModel.findById(userId);
+    const invoiceData = {
+      referenceMonth,
+      companyId: user.companyId,
+      userId: user._id,
+      status: InvoiceStatus.IGNORED,
+      invoiceNumber: '999',
+      fileName: 'invoice-ignored.pdf',
+      filePath: 'invoice-ignored.pdf',
+      mimeType: 'application/pdf',
+    };
+
+    return await this.invoiceModel.create(invoiceData);
+  }
 
   async uploadFile(
     file: Express.Multer.File,

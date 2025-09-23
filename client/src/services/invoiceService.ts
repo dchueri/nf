@@ -83,6 +83,17 @@ export const invoiceService = {
     return response.data
   },
 
+  async createIgnoredInvoice(invoiceData: {
+    userId: string
+    referenceMonth: string
+  }): Promise<Invoice> {
+    const response = await request<Invoice>(`/invoices/ignored`, {
+      method: 'POST',
+      data: invoiceData
+    })
+    return response.data
+  },
+
   async getMonthlySummary(
     year: number,
     month: number

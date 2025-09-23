@@ -4,7 +4,7 @@ import { Button } from '../../ui/Button'
 import { useToastHelpers } from '../../ui/Toast'
 import {
   useUserService,
-  UserStatsDashboard,
+  UserStatsDashboard
 } from '../../../services/userService'
 import dayjs from 'dayjs'
 import { User, UserRole, UserStatus } from 'types/user'
@@ -14,7 +14,8 @@ import { UserFilters, UserInvoiceStatusFilterType } from './UserFilters'
 import { UserTable } from './UserTable'
 import { StatsSkeleton, TableSkeleton } from '../../ui/SkeletonLoader'
 import { ButtonLoader } from '../../ui/LoadingSpinner'
-import { Invoice } from 'types/invoice'
+import { Invoice, InvoiceStatus } from 'types/invoice'
+import { useInvoiceService } from 'services/invoiceService'
 
 const CURRENT_MONTH = dayjs().format('YYYY-MM')
 
@@ -39,16 +40,15 @@ export const ManagerDashboard: React.FC = () => {
   })
   const toast = useToastHelpers()
   const { getUserStats, getUsersWithInvoiceStatus } = useUserService()
+  const { createIgnoredInvoice } = useInvoiceService()
 
-  const [usersPage, setUsersPage] = useState<any>(
-    {
-      docs: [],
-      total: 0,
-      page: 1,
-      limit: 10,
-      totalPages: 0
-    }
-  )
+  const [usersPage, setUsersPage] = useState<any>({
+    docs: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0
+  })
   const [stats, setStats] = useState<UserStatsDashboard>({
     total: 0,
     pending: 0,
@@ -219,6 +219,19 @@ export const ManagerDashboard: React.FC = () => {
         selectedMonth={selectedMonth}
         onUserAction={(userId, action) => {
           console.log('User action:', userId, action)
+          switch (action) {
+            case 'approve':
+              break
+            case 'reject':
+              break
+            case 'ignore':
+              createIgnoredInvoice({ userId, referenceMonth: selectedMonth }).then(() => {
+                toast.success('Nota fiscal ignorada com sucesso')
+              }).catch((error) => {
+                toast.error('Erro ao ignorar nota fiscal', error.message)
+              })
+              break
+          }
           // Implementar ações específicas aqui
         }}
         loading={dataLoading}

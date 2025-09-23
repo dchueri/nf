@@ -173,11 +173,6 @@ export const UserTable: React.FC<UserTableProps> = ({
       sortable: false
     },
     {
-      key: 'deadline',
-      label: 'Prazo',
-      sortable: false
-    },
-    {
       key: 'submissionDate',
       label: 'Data de Envio',
       sortable: false
@@ -236,30 +231,30 @@ export const UserTable: React.FC<UserTableProps> = ({
           </span>
         )
 
-      case 'deadline':
-        if (!invoice) return '-'
-        return (
-          <div className="text-sm text-gray-900">
-            {(() => {
-              const delayStatus = getDelayStatus(invoice.status)
-              if (!delayStatus) return '-'
+      // case 'deadline':
+      //   if (!invoice) return '-'
+      //   return (
+      //     <div className="text-sm text-gray-900">
+      //       {(() => {
+      //         const delayStatus = getDelayStatus(invoice.status)
+      //         if (!delayStatus) return '-'
 
-              if (delayStatus.isLate) {
-                return (
-                  <span className="text-red-600 font-medium">
-                    ⚠️ {delayStatus.daysLate} dia(s) atrasado
-                  </span>
-                )
-              } else {
-                return (
-                  <span className="text-green-600 font-medium">
-                    ⏰ {delayStatus.daysUntilDeadline} dia(s) restante(s)
-                  </span>
-                )
-              }
-            })()}
-          </div>
-        )
+      //         if (delayStatus.isLate) {
+      //           return (
+      //             <span className="text-red-600 font-medium">
+      //               ⚠️ {delayStatus.daysLate} dia(s) atrasado
+      //             </span>
+      //           )
+      //         } else {
+      //           return (
+      //             <span className="text-green-600 font-medium">
+      //               ⏰ {delayStatus.daysUntilDeadline} dia(s) restante(s)
+      //             </span>
+      //           )
+      //         }
+      //       })()}
+      //     </div>
+      //   )
 
       case 'submissionDate':
         if (!invoice) return '-'
@@ -299,7 +294,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 Lembrar
               </Button>
             )}
-            {invoice?.status !== InvoiceStatus.APPROVED && (
+            {!isApproved && (
               <Button
                 variant="secondary"
                 size="sm"
