@@ -13,4 +13,12 @@ export class UpdateInvoiceDto extends PartialType(UploadInvoiceDto) {
   })
   @IsString()
   status: InvoiceStatus;
+
+  @ApiProperty({
+    description: 'Motivo da rejeição',
+    example: 'Motivo da rejeição',
+    required: false,
+  })
+  @IsString()
+  rejectionReason?: string;
 }

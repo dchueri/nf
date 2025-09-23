@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import { BellIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { BellIcon, ChartBarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import { Button } from '../../ui/Button'
 import { useToastHelpers } from '../../ui/Toast'
 import {
@@ -12,10 +12,13 @@ import { UserStats } from './UserStats'
 import { DateSelector } from './DateSelector'
 import { UserFilters, UserInvoiceStatusFilterType } from './UserFilters'
 import { UserTable } from './UserTable'
-import { StatsSkeleton, TableSkeleton } from '../../ui/SkeletonLoader'
 import { ButtonLoader } from '../../ui/LoadingSpinner'
 import { Invoice, InvoiceStatus } from 'types/invoice'
 import { useInvoiceService } from 'services/invoiceService'
+import {
+  RejectInvoiceModal,
+  useRejectInvoiceModal
+} from '../../ui/RejectInvoiceModal'
 
 const CURRENT_MONTH = dayjs().format('YYYY-MM')
 
@@ -40,7 +43,15 @@ export const ManagerDashboard: React.FC = () => {
   })
   const toast = useToastHelpers()
   const { getUserStats, getUsersWithInvoiceStatus } = useUserService()
-  const { createIgnoredInvoice } = useInvoiceService()
+  const { createIgnoredInvoice, downloadInvoiceFile, updateInvoiceStatus } =
+    useInvoiceService()
+  const {
+    isOpen: isRejectModalOpen,
+    openModal: openRejectModal,
+    closeModal: closeRejectModal,
+    handleReject,
+    config
+  } = useRejectInvoiceModal()
 
   const [usersPage, setUsersPage] = useState<any>({
     docs: [],
@@ -57,16 +68,45 @@ export const ManagerDashboard: React.FC = () => {
 
   const users = usersPage.docs
 
-  useEffect(() => {
-    setSelectedFilter('all')
+  const handleGetUsers = useCallback(() => {
+    setDataLoading(true)
     getUserStats(selectedMonth)
       .then((statsData) => {
-        const data = statsData.data as UserStatsDashboard
-        setStats(data)
+        setStats(statsData.data as UserStatsDashboard)
       })
       .catch((error) => {
         console.error('Erro ao carregar dados:', error)
       })
+    getUsersWithInvoiceStatus(
+      selectedMonth,
+      selectedFilter as UserStatus,
+      UserRole.COLLABORATOR,
+      textSearch,
+      pagination.page,
+      pagination.limit
+    )
+      .then((usersData) => {
+        setUsersPage((prev: any) => ({
+          ...prev,
+          docs: usersData.data
+        }))
+        setDataLoading(false)
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar dados:', error)
+        setDataLoading(false)
+      })
+  }, [
+    selectedMonth,
+    selectedFilter,
+    textSearch,
+    pagination.page,
+    pagination.limit
+  ])
+
+  useEffect(() => {
+    setSelectedFilter('all')
+    handleGetUsers()
   }, [selectedMonth])
 
   useEffect(() => {
@@ -174,27 +214,13 @@ export const ManagerDashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-3">
-          <Button
-            variant="secondary"
-            onClick={handleSendReminders}
-            disabled={loading}
-          >
-            {loading ? (
-              <ButtonLoader text="Enviando..." />
-            ) : (
-              <>
-                <BellIcon className="h-4 w-4 mr-2" />
-                Enviar Lembretes
-              </>
-            )}
-          </Button>
           <Button onClick={handleGenerateReport} disabled={loading}>
             {loading ? (
-              <ButtonLoader text="Gerando..." />
+              <ButtonLoader text="Compilando Notas Fiscais..." />
             ) : (
               <>
-                <ChartBarIcon className="h-4 w-4 mr-2" />
-                Gerar Relatório
+                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                Compilar Notas Fiscais
               </>
             )}
           </Button>
@@ -217,24 +243,88 @@ export const ManagerDashboard: React.FC = () => {
       <UserTable
         users={users}
         selectedMonth={selectedMonth}
-        onUserAction={(userId, action) => {
-          console.log('User action:', userId, action)
+        onUserAction={(user, action, fileName) => {
+          setDataLoading(true)
           switch (action) {
             case 'approve':
+              updateInvoiceStatus(user.invoice._id, InvoiceStatus.APPROVED)
+                .then(() => {
+                  toast.success('Nota fiscal aprovada com sucesso')
+                  handleGetUsers()
+                })
+                .catch((error) => {
+                  toast.error('Erro ao aprovar nota fiscal', error.message)
+                })
               break
             case 'reject':
-              break
-            case 'ignore':
-              createIgnoredInvoice({ userId, referenceMonth: selectedMonth }).then(() => {
-                toast.success('Nota fiscal ignorada com sucesso')
-              }).catch((error) => {
-                toast.error('Erro ao ignorar nota fiscal', error.message)
+              const userName = user.name || 'Usuário'
+
+              openRejectModal(userName, (reason) => {
+                updateInvoiceStatus(
+                  user.invoice._id,
+                  InvoiceStatus.REJECTED,
+                  reason
+                )
+                  .then(() => {
+                    toast.success('Nota fiscal rejeitada com sucesso')
+                    handleGetUsers()
+                  })
+                  .catch((error) => {
+                    toast.error('Erro ao rejeitar nota fiscal', error.message)
+                  })
               })
               break
+            case 'download':
+              downloadInvoiceFile(user.invoice._id)
+                .then((file) => {
+                  if (!(file instanceof Blob)) {
+                    throw new Error(
+                      `Arquivo recebido não é um Blob válido. Tipo: ${typeof file}`
+                    )
+                  }
+
+                  const url = window.URL.createObjectURL(file)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = fileName || 'invoice.pdf'
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  window.URL.revokeObjectURL(url)
+
+                  toast.success('Nota fiscal salva com sucesso')
+                })
+                .catch((error) => {
+                  console.error('Erro ao baixar nota fiscal:', error)
+                  toast.error(`Erro ao baixar nota fiscal: ${error.message}`)
+                })
+              break
+            case 'ignore':
+              createIgnoredInvoice({
+                userId: user._id,
+                referenceMonth: selectedMonth
+              })
+                .then(() => {
+                  toast.success('Nota fiscal ignorada com sucesso')
+                  handleGetUsers()
+                })
+                .catch((error) => {
+                  toast.error('Erro ao ignorar nota fiscal', error.message)
+                })
+              break
           }
-          // Implementar ações específicas aqui
+          setDataLoading(false)
         }}
         loading={dataLoading}
+      />
+
+      {/* Modal de confirmação para rejeição */}
+      <RejectInvoiceModal
+        isOpen={isRejectModalOpen}
+        onClose={closeRejectModal}
+        onReject={handleReject}
+        loading={dataLoading}
+        userName={config?.userName}
       />
     </div>
   )

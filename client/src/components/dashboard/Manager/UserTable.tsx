@@ -4,18 +4,25 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  DocumentArrowDownIcon
 } from '@heroicons/react/24/outline'
 import { Button } from '../../ui/Button'
 import { User } from '../../../types/user'
 import { Invoice, InvoiceStatus } from '../../../types/invoice'
 import { RenderCell, Table, TableColumn } from '../../ui/Table'
 import dayjs from 'dayjs'
+import {
+  ActionGroup,
+  ButtonGroup,
+  DropdownButtonGroup,
+  ToolbarGroup
+} from '../../ui/ButtonGroup'
 
 interface UserTableProps {
   users: (User & { invoice: Invoice })[]
   selectedMonth: string
-  onUserAction?: (userId: string, action: string) => void
+  onUserAction?: (user: User & { invoice: Invoice }, action: string, fileName?: string) => void
   className?: string
   loading?: boolean
 }
@@ -40,7 +47,7 @@ const getStatusColor = (status: string) => {
       return 'bg-green-100 text-green-800'
     case 'rejected':
       return 'bg-red-100 text-red-800'
-    case 'pending':
+    case 'submitted':
       return 'bg-yellow-100 text-yellow-800'
     case 'not_submitted':
       return 'bg-gray-100 text-gray-800'
@@ -57,7 +64,7 @@ const getStatusLabel = (status: string) => {
       return 'Aprovada'
     case 'rejected':
       return 'Rejeitada'
-    case 'pending':
+    case 'submitted':
       return 'Enviada'
     default:
       return 'Pendente'
@@ -111,9 +118,9 @@ export const UserTable: React.FC<UserTableProps> = ({
 }) => {
   console.log('users', users)
 
-  const handleUserAction = (userId: string, action: string) => {
+  const handleUserAction = (user: User & { invoice: Invoice }, action: string, fileName?: string) => {
     if (onUserAction) {
-      onUserAction(userId, action)
+      onUserAction(user, action, fileName)
     }
   }
 
@@ -188,9 +195,9 @@ export const UserTable: React.FC<UserTableProps> = ({
     user: User & { invoice: Invoice },
     column: TableColumn<User & { invoice: Invoice }>
   ) => {
-    console.log('user', user)
     const invoice = user.invoice
     const isPending = !invoice
+    const isRejected = invoice?.status === InvoiceStatus.REJECTED
     const isApproved =
       invoice?.status === InvoiceStatus.APPROVED ||
       invoice?.status === InvoiceStatus.IGNORED
@@ -267,51 +274,58 @@ export const UserTable: React.FC<UserTableProps> = ({
       case 'actions':
         return (
           <div className="flex items-center space-x-2">
+            {!isPending && !isApproved && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleUserAction(user, 'download', `${dayjs(user.invoice.referenceMonth).format('YYYY-MM')}-${user.name}.pdf`)
+                }}
+              >
+                <DocumentArrowDownIcon className="h-4 w-4 mr-1" />
+                Download
+              </Button>
+            )}
             {invoice?.status === InvoiceStatus.SUBMITTED && (
-              <>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleUserAction(user._id, 'approve')}
-                >
-                  Aprovar
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleUserAction(user._id, 'reject')}
-                >
-                  Rejeitar
-                </Button>
-              </>
+              <DropdownButtonGroup
+                primaryAction={{
+                  id: 'approve',
+                  label: 'Aprovar',
+                  icon: <CheckCircleIcon className="h-4 w-4" />,
+                  onClick: () => handleUserAction(user, 'approve')
+                }}
+                secondaryActions={[
+                  {
+                    id: 'reject',
+                    label: 'Rejeitar',
+                    icon: <XCircleIcon className="h-4 w-4" />,
+                    onClick: () => handleUserAction(user, 'reject')
+                  }
+                ]}
+                size="sm"
+                variant="secondary"
+              />
             )}
             {isPending && (
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handleUserAction(user._id, 'remind')}
+                onClick={() => handleUserAction(user, 'remind')}
               >
                 Lembrar
               </Button>
             )}
-            {!isApproved && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleUserAction(user._id, 'ignore')}
-              >
-                Ignorar
-              </Button>
-            )}
-            {!isPending && !isApproved && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleUserAction(user._id, 'details')}
-              >
-                Ver Detalhes
-              </Button>
-            )}
+            {isPending ||
+              (isRejected && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleUserAction(user, 'ignore')}
+                >
+                  Ignorar
+                </Button>
+              ))}
           </div>
         )
 

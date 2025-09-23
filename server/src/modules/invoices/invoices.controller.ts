@@ -138,7 +138,10 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Criar nota fiscal ignorada' })
   @ApiResponse({ status: 201, description: 'Nota fiscal ignorada criada' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  createIgnoredInvoice(@Body() createIgnoredInvoiceDto: CreateIgnoredInvoiceDto, @Request() req) {
+  createIgnoredInvoice(
+    @Body() createIgnoredInvoiceDto: CreateIgnoredInvoiceDto,
+    @Request() req,
+  ) {
     return this.invoicesService.createIgnoredInvoice(createIgnoredInvoiceDto);
   }
 
@@ -149,13 +152,14 @@ export class InvoicesController {
   @ApiResponse({ status: 404, description: 'Nota fiscal não encontrada' })
   updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: string },
+    @Body() body: { status: string, rejectionReason: string },
     @Request() req,
   ) {
     return this.invoicesService.updateStatus(
       id,
       body.status as any,
       req.user.companyId,
+      body.rejectionReason,
       req.user._id,
     );
   }
@@ -181,6 +185,7 @@ export class InvoicesController {
   ) {
     const fileInfo = await this.invoicesService.downloadFile(
       id,
+      req.user._id,
       req.user.companyId,
     );
 

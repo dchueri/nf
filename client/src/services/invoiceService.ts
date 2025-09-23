@@ -1,5 +1,6 @@
 import { Invoice, InvoiceFilters, MonthlySummary } from '../types/invoice'
 import { PaginatedResponse, request } from '../utils/http'
+import axios from 'axios'
 
 export const invoiceService = {
   async getInvoices(
@@ -75,10 +76,10 @@ export const invoiceService = {
     })
   },
 
-  async updateInvoiceStatus(id: string, status: string): Promise<Invoice> {
+  async updateInvoiceStatus(id: string, status: string, reason?: string): Promise<Invoice> {
     const response = await request<Invoice>(`/invoices/${id}/status`, {
       method: 'PATCH',
-      data: { status }
+      data: { status, rejectionReason: reason }
     })
     return response.data
   },
@@ -110,10 +111,16 @@ export const invoiceService = {
   },
 
   async downloadInvoiceFile(id: string): Promise<Blob> {
-    const response = await request<Blob>(`/invoices/${id}/download`, {
-      method: 'GET',
-      responseType: 'blob'
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+    
+    const response = await axios.get(`${API_BASE_URL}/invoices/${id}/download`, {
+      responseType: 'blob',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : ''
+      }
     })
+    
     return response.data
   }
 }

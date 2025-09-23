@@ -9,7 +9,7 @@ import { Invoice, InvoiceStatus } from './schemas/invoice.schema';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UploadInvoiceDto } from './dto/upload-invoice.dto';
 import * as fs from 'fs';
-import { User } from '../users/schemas/user.schema';
+import { User, UserRole } from '../users/schemas/user.schema';
 import { GetInvoicesFiltersDto } from './dto/get-invoices-filters.dto';
 import dayjs from 'dayjs';
 import { PaginatedResponseDto } from 'src/common/dto/response.dto';
@@ -111,14 +111,19 @@ export class InvoicesService {
     };
   }
 
-  async findById(id: string, companyId: string): Promise<Invoice> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('ID de invoice inválido');
+  async findById(
+    id: string,
+    companyId: string,
+    userId?: string,
+  ): Promise<Invoice> {
+    const query: any = { _id: id, companyId };
+    if (userId) {
+      query.userId = userId;
     }
-
+    console.log('query', query);
     const invoice = await this.invoiceModel
-      .findOne({ _id: id, companyId })
-      .populate('submittedBy', 'name email')
+      .findOne(query)
+      .populate('userId', 'name email')
       .populate('reviewedBy', 'name email')
       .exec();
 
@@ -132,14 +137,22 @@ export class InvoicesService {
   async update(
     id: string,
     updateInvoiceDto: UpdateInvoiceDto,
-    companyId: string,
+    user: User,
   ): Promise<Invoice> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('ID de invoice inválido');
+    const newUpdateInvoiceDto: any = { ...updateInvoiceDto };
+    if (updateInvoiceDto.status === InvoiceStatus.REJECTED) {
+      newUpdateInvoiceDto.rejectionReason =
+        newUpdateInvoiceDto.rejectionReason || 'Não informado';
+      newUpdateInvoiceDto.reviewedBy = user._id;
+      newUpdateInvoiceDto.reviewedAt = new Date();
     }
 
     const invoice = await this.invoiceModel
-      .findOneAndUpdate({ _id: id, companyId }, updateInvoiceDto, { new: true })
+      .findOneAndUpdate(
+        { _id: id, companyId: user.companyId },
+        newUpdateInvoiceDto,
+        { new: true },
+      )
       .exec();
 
     if (!invoice) {
@@ -175,12 +188,9 @@ export class InvoicesService {
     id: string,
     status: InvoiceStatus,
     companyId: string,
+    rejectionReason: string,
     reviewedBy?: string,
   ): Promise<Invoice> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('ID de invoice inválido');
-    }
-
     const updateData: any = { status };
 
     if (
@@ -192,7 +202,7 @@ export class InvoicesService {
     }
 
     if (status === InvoiceStatus.REJECTED) {
-      // lógica para solicitar motivo da rejeição
+      updateData.rejectionReason = rejectionReason;
     }
 
     const invoice = await this.invoiceModel
@@ -251,9 +261,22 @@ export class InvoicesService {
 
   async downloadFile(
     id: string,
+    userId: string,
     companyId: string,
   ): Promise<{ filePath: string; fileName: string }> {
-    const invoice = await this.findById(id, companyId);
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    let userIdQuery: string | undefined;
+    if (user.role === UserRole.MANAGER) {
+      userIdQuery = undefined;
+    } else {
+      userIdQuery = user._id.toString();
+    }
+
+    const invoice = await this.findById(id, companyId, userIdQuery);
 
     if (!invoice.filePath || !fs.existsSync(invoice.filePath)) {
       throw new NotFoundException('Arquivo não encontrado');

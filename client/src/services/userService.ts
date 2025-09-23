@@ -114,7 +114,6 @@ export const userService = {
     )
   },
 
-  // Buscar usuários para dashboard do gestor
   async getUsers(
     page: number,
     limit: number,
