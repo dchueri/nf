@@ -68,7 +68,7 @@ export class UsersController {
     @Query('status') status: UserStatus,
     @Query('role') role: UserRole,
   ) {
-    const authorId = req.user.sub;
+    const authorId = req.user._id;
     return this.usersService.findByCompanyPaginated(
       req.user.companyId,
       page,

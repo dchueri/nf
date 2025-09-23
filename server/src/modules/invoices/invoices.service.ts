@@ -75,6 +75,8 @@ export class InvoicesService {
 
     if (filters?.status) {
       query.status = filters.status;
+    } else {
+      query.status = { $ne: InvoiceStatus.IGNORED };
     }
 
     if (filters?.referenceMonth) {

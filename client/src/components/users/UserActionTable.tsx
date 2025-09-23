@@ -7,6 +7,7 @@ import { PencilIcon } from '@heroicons/react/24/outline'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { Badge } from '../ui/Badge'
 import { SkeletonTableLine } from 'components/ui/Skeleton/SkeletonTableLine'
+import { useUser } from 'contexts/UserContext'
 
 export const UserActionTable = ({
   users,
@@ -31,6 +32,7 @@ export const UserActionTable = ({
   setPagination: (pagination: any) => void
   onAction: (userId: string, action: string) => void
 }) => {
+  const { user: currentUser } = useUser()
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case UserRole.MANAGER:
@@ -158,13 +160,18 @@ export const UserActionTable = ({
                       <div className="flex items-center space-x-2">
                         <Button
                           title="Editar"
+                          variant="secondary"
                           onClick={() => onAction(user._id, 'edit')}
+                          size="sm"
+                          className="w-full"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           title="Remover"
                           variant="danger"
+                          size="sm"
+                          className="w-full"
                           onClick={() => onAction(user._id, 'remove')}
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -176,6 +183,7 @@ export const UserActionTable = ({
                       <Button
                         variant="secondary"
                         size="sm"
+                        className="w-full"
                         onClick={() => onAction(user._id, 'cancel-invite')}
                       >
                         Cancelar Convite

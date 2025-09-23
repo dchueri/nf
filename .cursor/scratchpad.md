@@ -1688,6 +1688,60 @@ O servidor NestJS estava apresentando erro de compilação: `Cannot find module 
 
 **Ready for:** Both frontend and backend now working correctly in Docker environment
 
+### 🆕 EXECUTOR'S FEEDBACK: Modal de Motivo de Rejeição Implementado
+
+**Current Status:** Modal para exibir motivo da recusa da nota fiscal implementado com sucesso! ✅
+
+**User Request:** Adicionar um modal para exibir o motivo da recusa da nota fiscal.
+
+**Solution Implemented:**
+
+#### **RejectionReasonModal Component** ✅
+- **Modal Design:** Interface limpa e profissional para exibir motivo da rejeição
+- **Invoice Information:** Exibe dados completos da nota fiscal (número, colaborador, mês, valor, datas)
+- **Rejection Details:** Mostra motivo da rejeição, data de rejeição e quem rejeitou
+- **Visual Design:** Cores vermelhas para indicar rejeição, ícones apropriados
+- **Additional Notes:** Seção para observações adicionais se existirem
+
+#### **Integration with InvoiceTable** ✅
+- **Button Integration:** Botão "Ver motivo" já existente agora abre o modal
+- **Hook Implementation:** `useRejectionReasonModal` para gerenciamento de estado
+- **Modal State:** Controle de abertura/fechamento e dados da nota fiscal
+- **Error Handling:** Tratamento para casos sem motivo específico
+
+#### **Technical Implementation** ✅
+- **Type Safety:** Uso completo do tipo `Invoice` com campo `rejectionReason`
+- **Component Reuse:** Reutilização do componente `Modal` existente
+- **Date Formatting:** Formatação adequada de datas com `dayjs`
+- **Responsive Design:** Design responsivo e acessível
+- **Clean Code:** Código limpo e bem estruturado
+
+**Files Created:**
+- `client/src/components/ui/RejectionReasonModal.tsx` - Modal principal
+- `client/src/components/examples/RejectionReasonModalExample.tsx` - Exemplo de uso
+
+**Files Modified:**
+- `client/src/components/dashboard/InvoiceTable.tsx` - Integração do modal
+
+**Technical Achievements:**
+- ✅ Modal funcional para exibir motivo de rejeição
+- ✅ Integração perfeita com InvoiceTable existente
+- ✅ Interface intuitiva e profissional
+- ✅ Tratamento de casos edge (sem motivo específico)
+- ✅ Formatação adequada de dados e datas
+- ✅ Type-safe implementation com TypeScript
+- ✅ Compilação bem-sucedida sem erros
+- ✅ Reutilização de componentes existentes
+
+**User Experience Improvements:**
+- **Clarity:** Motivo da rejeição claramente exibido
+- **Context:** Informações completas da nota fiscal
+- **Professional:** Interface limpa e profissional
+- **Accessibility:** Design acessível e responsivo
+- **Consistency:** Mantém consistência com design system existente
+
+**Ready for:** Modal de motivo de rejeição está pronto para uso em produção
+
 ### 🆕 EXECUTOR'S FEEDBACK: User Edit Modal Status Buttons Implementation
 
 **Current Status:** Modal de edição de usuário atualizado com botões de status e confirmação! ✅

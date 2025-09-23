@@ -12,6 +12,10 @@ import { Button } from '../ui/Button'
 import { Table, TableColumn } from '../ui/Table'
 import dayjs from 'dayjs'
 import { formatToBRL } from 'brazilian-values'
+import { useInvoiceService } from 'services/invoiceService'
+import { downloadFile } from 'utils'
+import { useToastHelpers } from 'components/ui/Toast'
+import { RejectionReasonModal, useRejectionReasonModal } from '../ui/RejectionReasonModal'
 
 interface InvoiceTableProps {
   invoices: Invoice[]
@@ -28,8 +32,21 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   onDelete,
   className
 }) => {
+  const { downloadInvoiceFile } = useInvoiceService()
+  const toast = useToastHelpers()
+  const { isOpen, invoice, openModal, closeModal } = useRejectionReasonModal()
+
   const onDownload = (invoice: Invoice) => {
-    console.log('Download invoice:', invoice)
+    downloadInvoiceFile(invoice._id).then((file) => {
+      downloadFile(file, invoice.fileName)
+      toast.success('Nota fiscal salva com sucesso')
+    }).catch((error) => {
+      toast.error('Erro ao baixar nota fiscal')
+    })
+  }
+
+  const handleViewRejectionReason = (invoice: Invoice) => {
+    openModal(invoice)
   }
 
   const columns: TableColumn<Invoice>[] = [
@@ -123,7 +140,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation()
-                  onView?.(invoice)
+                  handleViewRejectionReason(invoice)
                 }}
               >
                 <EyeIcon className="h-4 w-4 mr-1" />
@@ -164,27 +181,37 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     }
   }
 
+  console.log('invoices', invoices)
   return (
-    <Table
-      data={invoices}
-      columns={columns}
-      renderCell={renderCell}
-      defaultSortField="issueDate"
-      defaultSortDirection="desc"
-      className={className}
-      pagination={{
-        enabled: true,
-        pageSize: 10,
-        showSizeSelector: true,
-        pageSizeOptions: [5, 10, 20, 50],
-        showPageInfo: true,
-        showNavigation: true
-      }}
-      emptyState={{
-        icon: <DocumentTextIcon className="h-12 w-12" />,
-        title: 'Nenhuma nota fiscal encontrada',
-        description: 'Tente ajustar os filtros de busca.'
-      }}
-    />
+    <>
+      <Table
+        data={invoices}
+        columns={columns}
+        renderCell={renderCell}
+        defaultSortField="issueDate"
+        defaultSortDirection="desc"
+        className={className}
+        pagination={{
+          enabled: true,
+          pageSize: 10,
+          showSizeSelector: true,
+          pageSizeOptions: [5, 10, 20, 50],
+          showPageInfo: true,
+          showNavigation: true
+        }}
+        emptyState={{
+          icon: <DocumentTextIcon className="h-12 w-12" />,
+          title: 'Nenhuma nota fiscal encontrada',
+          description: 'Tente ajustar os filtros de busca.'
+        }}
+      />
+
+      {/* Modal para exibir motivo da rejeição */}
+      <RejectionReasonModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        invoice={invoice}
+      />
+    </>
   )
 }

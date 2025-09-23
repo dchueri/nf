@@ -23,6 +23,7 @@ import {
   RejectInvoiceModal,
   useRejectInvoiceModal
 } from '../../ui/RejectInvoiceModal'
+import { downloadFile } from 'utils'
 
 const CURRENT_MONTH = dayjs().format('YYYY-MM')
 
@@ -314,21 +315,7 @@ export const ManagerDashboard: React.FC = () => {
             case 'download':
               downloadInvoiceFile(user.invoice._id)
                 .then((file) => {
-                  if (!(file instanceof Blob)) {
-                    throw new Error(
-                      `Arquivo recebido não é um Blob válido. Tipo: ${typeof file}`
-                    )
-                  }
-
-                  const url = window.URL.createObjectURL(file)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = fileName || 'invoice.pdf'
-                  document.body.appendChild(a)
-                  a.click()
-                  document.body.removeChild(a)
-                  window.URL.revokeObjectURL(url)
-
+                  downloadFile(file, fileName || 'invoice.pdf')
                   toast.success('Nota fiscal salva com sucesso')
                 })
                 .catch((error) => {

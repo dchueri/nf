@@ -90,7 +90,10 @@ export class UsersService {
     const approvedUsers = new Set<string>();
     const pendingUsers = new Set<string>();
     monthInvoices.forEach((invoice) => {
-      if (invoice.status === InvoiceStatus.APPROVED || invoice.status === InvoiceStatus.IGNORED) {
+      if (
+        invoice.status === InvoiceStatus.APPROVED ||
+        invoice.status === InvoiceStatus.IGNORED
+      ) {
         approvedUsers.add(invoice.userId.toString());
       } else {
         pendingUsers.add(invoice.userId.toString());
@@ -98,9 +101,10 @@ export class UsersService {
     });
 
     const notSubmittedUsers = companyUsers.filter(
-      (user) => !monthInvoices.some(
-        (invoice) => invoice.userId.toString() === user._id.toString(),
-      ),
+      (user) =>
+        !monthInvoices.some(
+          (invoice) => invoice.userId.toString() === user._id.toString(),
+        ),
     );
 
     stats.approved = approvedUsers.size;
@@ -113,8 +117,8 @@ export class UsersService {
     return createdUser.save();
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+  async findAll({ userId }: { userId: string }): Promise<User[]> {
+    return this.userModel.find({ _id: { ne: userId } }).exec();
   }
 
   async findById(id: string): Promise<User> {
@@ -138,7 +142,8 @@ export class UsersService {
     page: number,
     limit: number,
   ): Promise<(FlattenMaps<User> & { invoice: FlattenMaps<Invoice> })[]> {
-    const filters = this.usersThatMustSendInvoicesFilterByReferenceMonth(referenceMonth);
+    const filters =
+      this.usersThatMustSendInvoicesFilterByReferenceMonth(referenceMonth);
     const companyUsers = await this.userModel
       .find({
         companyId,
@@ -285,6 +290,7 @@ export class UsersService {
       filters.role = role;
     }
 
+    console.log('filters', authorId);
     if (authorId) {
       filters._id = { $ne: authorId };
     }

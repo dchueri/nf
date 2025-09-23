@@ -22,6 +22,7 @@ export const invoiceService = {
     const endpoint = `/invoices${queryString ? `?${queryString}` : ''}`
 
     const response = await request<PaginatedResponse<Invoice>>(endpoint)
+    console.log('response', response.data)
     return response.data
   },
 
