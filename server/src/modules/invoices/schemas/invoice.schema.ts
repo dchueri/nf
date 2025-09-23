@@ -50,6 +50,9 @@ export class Invoice extends Document {
 
   @Prop()
   rejectionReason?: string;
+
+  @Prop()
+  deletedAt?: Date;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);

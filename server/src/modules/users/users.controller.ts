@@ -67,8 +67,6 @@ export class UsersController {
     @Query('search') search: string,
     @Query('status') status: UserStatus,
     @Query('role') role: UserRole,
-    @Query('selectedMonth') selectedMonth: string,
-    @Query('toDashboard') toDashboard: boolean,
   ) {
     const authorId = req.user.sub;
     return this.usersService.findByCompanyPaginated(
@@ -78,8 +76,6 @@ export class UsersController {
       search,
       status,
       role,
-      selectedMonth,
-      toDashboard,
       authorId,
     );
   }
@@ -100,6 +96,27 @@ export class UsersController {
     } else {
       return this.usersService.getOneUserStatsByMonth(user, referenceMonth);
     }
+  }
+
+  @Get('invoice-status')
+  @ApiOperation({ summary: 'Obter status das faturas dos usuários' })
+  @ApiResponse({ status: 200, description: 'Status das faturas dos usuários' })
+  getInvoiceStatus(
+    @Request() req,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('search') search: string,
+    @Query('status') status: UserStatus,
+    @Query('referenceMonth') referenceMonth: string,
+  ) {
+    return this.usersService.getUsersWithInvoiceStatus(
+      req.user.companyId,
+      referenceMonth,
+      status,
+      search,
+      page,
+      limit,
+    );
   }
 
   @Get('profile')

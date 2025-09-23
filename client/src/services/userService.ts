@@ -1,5 +1,5 @@
 import { Invoice, InvoiceStatus } from 'types/invoice'
-import { User, UserRole } from '../types/user'
+import { User, UserRole, UserStatus } from '../types/user'
 import { request, Response } from '../utils/http'
 
 // Interfaces para as operações
@@ -136,6 +136,27 @@ export const userService = {
         selectedMonth
       }
     })
+  },
+
+  async getUsersWithInvoiceStatus(
+    referenceMonth: string,
+    status: string,
+    role: UserRole,
+    search: string,
+    page: number,
+    limit: number
+  ): Promise<Response<(User & { invoice: Invoice })[]>> {
+    const params = new URLSearchParams({
+      referenceMonth,
+      status: status.toString(),
+      role: role.toString(),
+      search,
+      page: page.toString(),
+      limit: limit.toString()
+    })
+    return request<(User & { invoice: Invoice })[]>(
+      `/users/invoice-status?${params}`
+    )
   },
 
   // Buscar usuários para dashboard do colaborador

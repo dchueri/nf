@@ -7,6 +7,12 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline'
 
+export type RenderCell<T = any> = (
+  item: T,
+  column: TableColumn<T>,
+  index?: number
+) => React.ReactNode
+
 export interface TableColumn<T = any> {
   key: string
   label: string

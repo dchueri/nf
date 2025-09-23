@@ -17,7 +17,6 @@ export const UserModalsExample: React.FC = () => {
     status: UserStatus.ACTIVE,
     department: 'TI',
     companyId: 'company-1',
-    monthsWithInvoices: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }

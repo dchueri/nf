@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { FilterQuery, FlattenMaps, Model, Types } from 'mongoose';
 import { User, UserRole, UserStatus } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -57,10 +57,12 @@ export class UsersService {
 
     const limitDate = company.getDateLimit(year, month);
 
-    const monthInvoices = await this.invoiceModel.find({
-      userId: user._id,
-      referenceMonth: { $eq: dayjs(referenceMonth).toDate() },
-    }).sort({ createdAt: -1 });
+    const monthInvoices = await this.invoiceModel
+      .find({
+        userId: user._id,
+        referenceMonth: { $eq: dayjs(referenceMonth).toDate() },
+      })
+      .sort({ createdAt: -1 });
 
     return {
       invoices: monthInvoices,
@@ -122,6 +124,148 @@ export class UsersService {
     return user;
   }
 
+  async getUsersWithInvoiceStatus(
+    companyId: string,
+    referenceMonth: string,
+    userInvoiceStatus: string,
+    search: string,
+    page: number,
+    limit: number,
+  ): Promise<(FlattenMaps<User> & { invoice: FlattenMaps<Invoice> })[]> {
+    console.log(
+      companyId,
+      referenceMonth,
+      userInvoiceStatus,
+      search,
+      page,
+      limit,
+    );
+
+    const companyUsers = await this.userModel
+      .find({
+        companyId,
+        status: UserStatus.ACTIVE,
+        role: UserRole.COLLABORATOR,
+      })
+      .lean();
+
+    const userIds = companyUsers.map((user) => user._id);
+    const invoiceFilter: FilterQuery<Invoice> = {
+      userId: { $in: userIds },
+      deletedAt: { $exists: false },
+    };
+    if (search) {
+      invoiceFilter.$or = [
+        { invoiceNumber: { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (referenceMonth) {
+      invoiceFilter.referenceMonth = {
+        $gte: dayjs(referenceMonth).startOf('month').toISOString(),
+        $lte: dayjs(referenceMonth).endOf('month').toISOString(),
+      };
+    }
+
+    let invoicesOfMonth = await this.invoiceModel
+      .find(invoiceFilter)
+      .sort({ referenceMonth: -1 })
+      .lean();
+
+    const usersWithoutInvoice = companyUsers.filter(
+      (user) =>
+        !invoicesOfMonth.some(
+          (invoice) => invoice.userId.toString() === user._id.toString(),
+        ),
+    ).map((user) => {
+      return {
+        ...user,
+        invoice: null,
+      };
+    });
+    if (userInvoiceStatus === 'not_submitted') {
+      return usersWithoutInvoice;
+    }
+
+    const usersThatHaveInvoice = companyUsers.filter((user) =>
+      invoicesOfMonth.some(
+        (invoice) => invoice.userId.toString() === user._id.toString(),
+      ),
+    );
+
+    const usersWithInvoice = usersThatHaveInvoice
+      .map((user) => {
+        const userInvoices = this.getInvoicesByUserId(
+          user._id.toString(),
+          invoicesOfMonth,
+        );
+
+        const invoice = this.getUserInvoiceByPriority(userInvoices);
+        if (
+          userInvoiceStatus === 'approved' &&
+          (invoice.status === InvoiceStatus.APPROVED ||
+            invoice.status === InvoiceStatus.IGNORED)
+        ) {
+          return {
+            ...user,
+            invoice,
+          };
+        }
+        if (
+          userInvoiceStatus === 'rejected' &&
+          invoice.status === InvoiceStatus.REJECTED
+        ) {
+          return {
+            ...user,
+            invoice,
+          };
+        }
+        if (
+          userInvoiceStatus === 'pending' &&
+          invoice.status === InvoiceStatus.SUBMITTED
+        ) {
+          return {
+            ...user,
+            invoice,
+          };
+        }
+        if (userInvoiceStatus === 'all' || !userInvoiceStatus) {
+          return {
+            ...user,
+            invoice,
+          };
+        }
+      })
+      .filter(Boolean);
+
+    if (userInvoiceStatus === 'all' || !userInvoiceStatus) {
+      return [...usersWithInvoice, ...usersWithoutInvoice];
+    }
+    return usersWithInvoice;
+  }
+
+  private getUserInvoiceByPriority(
+    userInvoices: Invoice[],
+    priorityLimit?: InvoiceStatus,
+  ): Invoice {
+    let invoice = userInvoices.find(
+      (invoice) => invoice.status === InvoiceStatus.SUBMITTED,
+    );
+
+    if (!invoice) {
+      invoice = userInvoices.find(
+        (invoice) =>
+          invoice.status === InvoiceStatus.APPROVED ||
+          invoice.status === InvoiceStatus.IGNORED,
+      );
+    }
+    if (!invoice) {
+      invoice = userInvoices.find(
+        (invoice) => invoice.status === InvoiceStatus.REJECTED,
+      );
+    }
+    return invoice;
+  }
+
   async findByCompanyPaginated(
     companyId: string,
     page: number = 1,
@@ -129,8 +273,6 @@ export class UsersService {
     search: string,
     status: UserStatus,
     role: UserRole,
-    selectedMonth: string,
-    toDashboard: boolean,
     authorId: string,
   ): Promise<PaginatedResponseDto<User>> {
     let filters: FilterQuery<User> = { companyId };
@@ -149,15 +291,6 @@ export class UsersService {
     }
 
     filters.status = status ? status : { $ne: UserStatus.INACTIVE };
-    if (toDashboard) {
-      filters = {
-        ...filters,
-        ...this.usersThatMustSendInvoicesFilterByReferenceMonth(
-          selectedMonth,
-          status,
-        ),
-      };
-    }
 
     const users = await this.userModel
       .find(filters)
@@ -360,5 +493,11 @@ export class UsersService {
       }
     }
     return filters;
+  }
+
+  private getInvoicesByUserId(userId: string, invoices: Invoice[]): Invoice[] {
+    return invoices.filter(
+      (invoice) => invoice.userId.toString() === userId.toString(),
+    );
   }
 }

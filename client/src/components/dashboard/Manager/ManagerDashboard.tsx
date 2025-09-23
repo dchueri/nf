@@ -4,21 +4,22 @@ import { Button } from '../../ui/Button'
 import { useToastHelpers } from '../../ui/Toast'
 import {
   useUserService,
-  UserStatsDashboard
+  UserStatsDashboard,
 } from '../../../services/userService'
 import dayjs from 'dayjs'
-import { User } from 'types/user'
+import { User, UserRole, UserStatus } from 'types/user'
 import { UserStats } from './UserStats'
 import { DateSelector } from './DateSelector'
 import { UserFilters, UserInvoiceStatusFilterType } from './UserFilters'
 import { UserTable } from './UserTable'
 import { StatsSkeleton, TableSkeleton } from '../../ui/SkeletonLoader'
 import { ButtonLoader } from '../../ui/LoadingSpinner'
+import { Invoice } from 'types/invoice'
 
 const CURRENT_MONTH = dayjs().format('YYYY-MM')
 
 interface UserListResponse {
-  docs: User[]
+  docs: (User & { invoice: Invoice })[]
   total: number
   page: number
   limit: number
@@ -37,15 +38,17 @@ export const ManagerDashboard: React.FC = () => {
     limit: 10
   })
   const toast = useToastHelpers()
-  const { getUserStats, getUsers } = useUserService()
+  const { getUserStats, getUsersWithInvoiceStatus } = useUserService()
 
-  const [usersPage, setUsersPage] = useState<UserListResponse>({
-    docs: [],
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 0
-  })
+  const [usersPage, setUsersPage] = useState<any>(
+    {
+      docs: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0
+    }
+  )
   const [stats, setStats] = useState<UserStatsDashboard>({
     total: 0,
     pending: 0,
@@ -69,18 +72,20 @@ export const ManagerDashboard: React.FC = () => {
   useEffect(() => {
     setDataLoading(true)
     Promise.all([
-      getUsers(
-        pagination.page,
-        pagination.limit,
-        selectedFilter,
-        'collaborator',
-        textSearch,
+      getUsersWithInvoiceStatus(
         selectedMonth,
-        true
+        selectedFilter as UserStatus,
+        UserRole.COLLABORATOR,
+        textSearch,
+        pagination.page,
+        pagination.limit
       )
     ])
       .then(([usersData]) => {
-        setUsersPage(usersData.data)
+        setUsersPage((prev: any) => ({
+          ...prev,
+          docs: usersData.data
+        }))
         setDataLoading(false)
       })
       .catch((error) => {
@@ -209,15 +214,15 @@ export const ManagerDashboard: React.FC = () => {
         onFilterChange={setSelectedFilter}
       />
 
-        <UserTable
-          users={users}
-          selectedMonth={selectedMonth}
-          onUserAction={(userId, action) => {
-            console.log('User action:', userId, action)
-            // Implementar ações específicas aqui
-          }}
-          loading={dataLoading}
-        />
+      <UserTable
+        users={users}
+        selectedMonth={selectedMonth}
+        onUserAction={(userId, action) => {
+          console.log('User action:', userId, action)
+          // Implementar ações específicas aqui
+        }}
+        loading={dataLoading}
+      />
     </div>
   )
 }
